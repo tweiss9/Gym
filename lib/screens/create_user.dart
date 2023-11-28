@@ -77,9 +77,6 @@ class CreateUserPageState extends State<CreateUserPage> {
 
   Future<void> performUserCreation() async {
     if (_formKey.currentState!.validate()) {
-      final BuildContext context = this.context;
-      final completer = Completer<void>();
-
       try {
         UserCredential userCredential =
             await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -95,34 +92,22 @@ class CreateUserPageState extends State<CreateUserPage> {
         });
 
         if (mounted) {
-          Navigator.push(
+          await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => HomePage(name: nameController.text),
+              builder: (context) => const HomePage(),
             ),
-          ).then((_) {
-            completer.complete();
-          });
+          );
         }
       } on FirebaseAuthException catch (e) {
         handleFirebaseAuthError(e);
       } catch (e) {
-        completer.completeError(e);
+        showError("Error: $e");
       }
-
-      return completer.future;
     }
-  }
-
-  bool validateInputs() {
-    if (_formKey.currentState!.validate()) {
-      return true;
-    }
-    return false;
   }
 
   Future<void> handleUserCreation() async {
-    final completer = Completer<void>();
     final BuildContext context = this.context;
 
     try {
@@ -140,22 +125,18 @@ class CreateUserPageState extends State<CreateUserPage> {
       });
 
       if (mounted) {
-        Navigator.push(
+        await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => HomePage(name: nameController.text),
+            builder: (context) => const HomePage(),
           ),
-        ).then((_) {
-          completer.complete();
-        });
+        );
       }
     } on FirebaseAuthException catch (e) {
       handleFirebaseAuthError(e);
     } catch (e) {
-      completer.completeError(e);
+      showError("Error: $e");
     }
-
-    return completer.future;
   }
 
   void handleFirebaseAuthError(FirebaseAuthException e) {

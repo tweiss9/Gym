@@ -26,25 +26,13 @@ class SignInPageState extends State<SignInPage> {
 
   Future<void> handleSignIn() async {
     if (emailController.text.isNotEmpty && passwordController.text.isNotEmpty) {
-      Completer<void> completer = Completer<void>();
-
       try {
-        UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: emailController.text,
-          password: passwordController.text,
+        await Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const HomePage(),
+          ),
         );
-
-        String name = await fetchName(userCredential.user!.uid);
-
-        completer.future.then((_) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => HomePage(name: name),
-            ),
-          );
-        });
       } on FirebaseAuthException catch (e) {
         switch (e.code) {
           case 'invalid-credential':
@@ -62,8 +50,8 @@ class SignInPageState extends State<SignInPage> {
           default:
             showError(e.message ?? 'Unknown error occurred.');
         }
-      } finally {
-        completer.complete();
+      } catch (e) {
+        showError("Error: $e");
       }
     } else {
       showError('Please fill in both email and password fields.');
