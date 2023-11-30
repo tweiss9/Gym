@@ -16,10 +16,9 @@ class SettingsPage extends StatefulWidget {
 
 class SettingsPageState extends State<SettingsPage> {
   final GlobalKey<ScaffoldState> scaffoldGlobalKey = GlobalKey<ScaffoldState>();
-  int _currentIndex = 4;
   final FirebaseAuth auth = FirebaseAuth.instance;
-
   late Future<String?> userNameFuture;
+  int _currentIndex = 4;
 
   @override
   void initState() {
@@ -51,6 +50,57 @@ class SettingsPageState extends State<SettingsPage> {
       }
     } catch (e) {
       throw Exception('Error fetching name: $e');
+    }
+  }
+
+  Future<void> editName() async {
+    String? currentName = await fetchName();
+    String? newName;
+
+    if (mounted) {
+      newName = await showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Edit Name'),
+            content: TextField(
+              decoration: const InputDecoration(labelText: 'New Name'),
+              onChanged: (value) {
+                newName = value;
+              },
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(newName);
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (newName != null && newName != currentName) {
+        String uid = auth.currentUser!.uid;
+        String? updatedName = newName;
+
+        await FirebaseDatabase.instance
+            .ref()
+            .child('users')
+            .child(uid)
+            .update({'name': updatedName});
+
+        setState(() {
+          userNameFuture = Future.value(updatedName);
+        });
+      }
     }
   }
 
@@ -92,6 +142,10 @@ class SettingsPageState extends State<SettingsPage> {
                   return Text('Hello, ${snapshot.data}!');
                 }
               },
+            ),
+            ElevatedButton(
+              onPressed: editName,
+              child: const Text('Edit Name'),
             ),
             ElevatedButton(
               onPressed: signOut,
