@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '/screens/account.dart';
 import '/screens/history.dart';
-import '/screens/home.dart';
+import '/screens/workout.dart';
 import '/screens/nutrition.dart';
 import '/screens/settings.dart';
 
@@ -37,7 +37,7 @@ class CustomBottomNavigation extends StatelessWidget {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const HomePage(),
+            builder: (context) => const WorkoutPage(),
           ),
         );
         break;
@@ -52,9 +52,7 @@ class CustomBottomNavigation extends StatelessWidget {
       case 4:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const SettingsPage()
-          ),
+          MaterialPageRoute(builder: (context) => const SettingsPage()),
         );
         break;
       default:
@@ -80,8 +78,8 @@ class CustomBottomNavigation extends StatelessWidget {
           label: 'History',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
+          icon: Icon(Icons.fitness_center),
+          label: 'Workout',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.restaurant_menu),

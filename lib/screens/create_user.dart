@@ -1,9 +1,7 @@
-import 'dart:async';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'home.dart';
+import 'workout.dart';
 
 class CreateUserPage extends StatefulWidget {
   const CreateUserPage({super.key});
@@ -95,7 +93,7 @@ class CreateUserPageState extends State<CreateUserPage> {
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const HomePage(),
+              builder: (context) => const WorkoutPage(),
             ),
           );
         }
@@ -128,7 +126,7 @@ class CreateUserPageState extends State<CreateUserPage> {
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const HomePage(),
+            builder: (context) => const WorkoutPage(),
           ),
         );
       }

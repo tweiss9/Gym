@@ -18,7 +18,8 @@ class NutritionPageState extends State<NutritionPage> {
         title: const Text('Nutrition Page'),
       ),
       body: const Center(
-        child: Text('This is the Nutrition Page content.'),
+        child: Text(
+            'This is the Nutrition Page content.\n This page is under construction.'),
       ),
       bottomNavigationBar: CustomBottomNavigation(
         currentIndex: _currentIndex,

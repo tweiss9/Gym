@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart'
-    show DataSnapshot, DatabaseEvent, DatabaseReference, FirebaseDatabase;
 import 'package:flutter/material.dart';
-import 'home.dart';
+import 'workout.dart';
 import 'create_user.dart';
 
 class SignInPage extends StatefulWidget {
@@ -27,12 +25,18 @@ class SignInPageState extends State<SignInPage> {
   Future<void> handleSignIn() async {
     if (emailController.text.isNotEmpty && passwordController.text.isNotEmpty) {
       try {
-        await Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const HomePage(),
-          ),
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailController.text,
+          password: passwordController.text,
         );
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const WorkoutPage(),
+            ),
+          );
+        }
       } on FirebaseAuthException catch (e) {
         switch (e.code) {
           case 'invalid-credential':
@@ -55,33 +59,6 @@ class SignInPageState extends State<SignInPage> {
       }
     } else {
       showError('Please fill in both email and password fields.');
-    }
-  }
-
-  Future<String> fetchName(String uid) async {
-    try {
-      DatabaseReference usersRef =
-          FirebaseDatabase.instance.ref().child('users');
-
-      DatabaseEvent event = await usersRef.child(uid).once();
-      DataSnapshot snapshot = event.snapshot;
-
-      if (snapshot.value != null && snapshot.value is Map<dynamic, dynamic>) {
-        Map<dynamic, dynamic> userData =
-            snapshot.value as Map<dynamic, dynamic>;
-
-        Map<String, dynamic> typedData = Map<String, dynamic>.from(userData);
-
-        if (typedData.containsKey('name')) {
-          return typedData['name'].toString();
-        } else {
-          throw Exception('Name not available');
-        }
-      } else {
-        throw Exception('Invalid data structure');
-      }
-    } catch (e) {
-      throw Exception('Error fetching name: $e');
     }
   }
 
