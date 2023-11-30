@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'workout.dart';
 import 'create_user.dart';
+import '/widgets/show_error.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -23,7 +24,9 @@ class SignInPageState extends State<SignInPage> {
   }
 
   Future<void> handleSignIn() async {
-    if (emailController.text.isNotEmpty && passwordController.text.isNotEmpty) {
+    if (emailController.text.isNotEmpty &&
+        passwordController.text.isNotEmpty &&
+        mounted) {
       try {
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: emailController.text,
@@ -38,38 +41,38 @@ class SignInPageState extends State<SignInPage> {
           );
         }
       } on FirebaseAuthException catch (e) {
-        switch (e.code) {
-          case 'invalid-credential':
-            showError('Incorrect email or password. Please try again.');
-            break;
-          case 'invalid-email':
-            showError('Invalid email. Please enter a valid email.');
-            break;
-          case 'user-disabled':
-            showError('User disabled. Please contact support.');
-            break;
-          case 'too-many-requests':
-            showError('Too many requests. Please try again later.');
-            break;
-          default:
-            showError(e.message ?? 'Unknown error occurred.');
+        if (mounted) {
+          switch (e.code) {
+            case 'invalid-credential':
+              ErrorHandler.showError(
+                  context, 'Incorrect email or password. Please try again.');
+              break;
+            case 'invalid-email':
+              ErrorHandler.showError(
+                  context, 'Invalid email. Please enter a valid email.');
+              break;
+            case 'user-disabled':
+              ErrorHandler.showError(
+                  context, 'User disabled. Please contact support.');
+              break;
+            case 'too-many-requests':
+              ErrorHandler.showError(
+                  context, 'Too many requests. Please try again later.');
+              break;
+            default:
+              ErrorHandler.showError(
+                  context, e.message ?? 'Unknown error occurred.');
+          }
         }
       } catch (e) {
-        showError("Error: $e");
+        if (mounted) {
+          ErrorHandler.showError(context, "Error: $e");
+        }
       }
     } else {
-      showError('Please fill in both email and password fields.');
+      ErrorHandler.showError(
+          context, 'Please fill in both email and password fields.');
     }
-  }
-
-  void showError(String message) {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    scaffoldMessenger.showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
   }
 
   @override

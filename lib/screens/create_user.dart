@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'workout.dart';
+import '/widgets/show_error.dart';
 
 class CreateUserPage extends StatefulWidget {
   const CreateUserPage({super.key});
@@ -100,7 +101,9 @@ class CreateUserPageState extends State<CreateUserPage> {
       } on FirebaseAuthException catch (e) {
         handleFirebaseAuthError(e);
       } catch (e) {
-        showError("Error: $e");
+        if (mounted) {
+          ErrorHandler.showError(context, "Error: $e");
+        }
       }
     }
   }
@@ -133,37 +136,31 @@ class CreateUserPageState extends State<CreateUserPage> {
     } on FirebaseAuthException catch (e) {
       handleFirebaseAuthError(e);
     } catch (e) {
-      showError("Error: $e");
+      if (mounted) {
+        ErrorHandler.showError(context, "Error: $e");
+      }
     }
   }
 
   void handleFirebaseAuthError(FirebaseAuthException e) {
     switch (e.code) {
       case 'email-already-in-use':
-        showError('Email is already in use. Please use a different email.');
+        ErrorHandler.showError(
+            context, 'Email is already in use. Please use a different email.');
         break;
       case 'invalid-email':
-        showError('Invalid email address. Please enter a valid email.');
+        ErrorHandler.showError(
+            context, 'Invalid email address. Please enter a valid email.');
         break;
       case 'weak-password':
-        showError(
+        ErrorHandler.showError(context,
             'Weak password. Password should be at least 6 characters long.');
         break;
       default:
-        showError(
+        ErrorHandler.showError(context,
             'An error occurred during account creation. Please try again.');
         break;
     }
-  }
-
-  void showError(String message) {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    scaffoldMessenger.showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
   }
 
   @override

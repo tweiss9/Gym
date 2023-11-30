@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/firebase_database.dart'
     show DataSnapshot, DatabaseEvent, DatabaseReference, FirebaseDatabase;
 import '/widgets/bottom_navigation.dart';
+import '/widgets/show_error.dart';
 import 'sign_in.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -64,17 +65,10 @@ class SettingsPageState extends State<SettingsPage> {
         );
       }
     } catch (e) {
-      showError("Error signing out: $e");
+      if (mounted) {
+        ErrorHandler.showError(context, "Error signing out: $e");
+      }
     }
-  }
-
-  void showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
   }
 
   @override
@@ -94,8 +88,6 @@ class SettingsPageState extends State<SettingsPage> {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const CircularProgressIndicator();
-                } else if (snapshot.hasError || snapshot.data == null) {
-                  return const Text('Error: Empty data!');
                 } else {
                   return Text('Hello, ${snapshot.data}!');
                 }
