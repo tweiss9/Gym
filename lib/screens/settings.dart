@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/firebase_database.dart'
     show DataSnapshot, DatabaseEvent, DatabaseReference, FirebaseDatabase;
+import 'package:google_sign_in/google_sign_in.dart';
 import '/widgets/bottom_navigation.dart';
 import '/widgets/show_error.dart';
 import 'sign_in.dart';
@@ -104,6 +105,51 @@ class SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  Future<void> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      if (googleUser == null) {
+        if (mounted) {
+          ErrorHandler.showError(context, "Signing in cancelled.");
+        }
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      final User? firebaseUser = userCredential.user;
+
+      if (firebaseUser != null) {
+        if (userCredential.additionalUserInfo!.isNewUser) {
+          setState(() {
+            userNameFuture = fetchName();
+          });
+        } else {
+          if (mounted) {
+            ErrorHandler.showError(
+              context,
+              "User already exists with Google email:",
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorHandler.showError(context, 'Error signing in with Google: $e');
+      }
+    }
+  }
+
   Future<void> signOut() async {
     try {
       await FirebaseAuth.instance.signOut();
@@ -146,6 +192,10 @@ class SettingsPageState extends State<SettingsPage> {
             ElevatedButton(
               onPressed: editName,
               child: const Text('Edit Name'),
+            ),
+            ElevatedButton(
+              onPressed: signInWithGoogle,
+              child: const Text('Sign In with Google'),
             ),
             ElevatedButton(
               onPressed: signOut,

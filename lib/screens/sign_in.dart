@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_button/sign_in_button.dart';
 import 'package:flutter/material.dart';
 import 'workout.dart';
 import 'create_user.dart';
@@ -75,6 +78,49 @@ class SignInPageState extends State<SignInPage> {
     }
   }
 
+  Future<UserCredential?> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      if (googleUser == null) {
+        if (mounted) {
+          ErrorHandler.showError(context, "Signing in cancelled.");
+        }
+        return null;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        await FirebaseDatabase.instance
+            .ref()
+            .child('users')
+            .child(user.uid)
+            .set({
+          'name': user.displayName,
+          'email': user.email,
+        });
+      }
+
+      return userCredential;
+    } catch (e) {
+      if (mounted) {
+        ErrorHandler.showError(context, 'Error signing in with Google: $e');
+      }
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,6 +174,22 @@ class SignInPageState extends State<SignInPage> {
                 );
               },
               child: const Text('Create User'),
+            ),
+            SignInButton(
+              Buttons.googleDark,
+              onPressed: () async {
+                final UserCredential? userCredential = await signInWithGoogle();
+                if (userCredential != null) {
+                  if (mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const WorkoutPage(),
+                      ),
+                    );
+                  }
+                }
+              },
             ),
           ],
         ),
