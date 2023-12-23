@@ -29,28 +29,23 @@ class SettingsPageState extends State<SettingsPage> {
 
   Future<String> fetchName() async {
     try {
-      DatabaseReference usersRef =
-          FirebaseDatabase.instance.ref().child('users');
       String uid = auth.currentUser!.uid;
-      DatabaseEvent event = await usersRef.child(uid).once();
+      DatabaseReference usersRef = FirebaseDatabase.instance
+          .ref()
+          .child('users')
+          .child(uid)
+          .child('Account Information')
+          .child('name');
+
+      DatabaseEvent event = await usersRef.once();
       DataSnapshot snapshot = event.snapshot;
 
-      if (snapshot.value != null && snapshot.value is Map<dynamic, dynamic>) {
-        Map<dynamic, dynamic> userData =
-            snapshot.value as Map<dynamic, dynamic>;
-
-        Map<String, dynamic> typedData = Map<String, dynamic>.from(userData);
-
-        if (typedData.containsKey('name')) {
-          return typedData['name'].toString();
-        } else {
-          throw Exception('Name not available');
-        }
-      } else {
-        throw Exception('Invalid data structure');
-      }
+      return snapshot.value.toString();
     } catch (e) {
-      throw Exception('Error fetching name: $e');
+      if (mounted) {
+        ErrorHandler.showError(context, 'Error fetching name: $e');
+      }
+      return null.toString();
     }
   }
 
@@ -96,6 +91,7 @@ class SettingsPageState extends State<SettingsPage> {
             .ref()
             .child('users')
             .child(uid)
+            .child('Account Information')
             .update({'name': updatedName});
 
         setState(() {

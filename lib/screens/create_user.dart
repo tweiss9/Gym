@@ -28,10 +28,6 @@ class CreateUserPageState extends State<CreateUserPage> {
   @override
   void initState() {
     super.initState();
-    nameController = TextEditingController();
-    emailController = TextEditingController();
-    passwordController = TextEditingController();
-    confirmPasswordController = TextEditingController();
   }
 
   @override
@@ -86,8 +82,11 @@ class CreateUserPageState extends State<CreateUserPage> {
         String uid = userCredential.user!.uid;
 
         await _usersRef.child(uid).set({
-          'name': nameController.text,
-          'email': emailController.text,
+          'Account Information': {
+            'name': nameController.text,
+            'email': emailController.text,
+          },
+          'Workouts': {'default': 'No workouts yet'}
         });
 
         if (mounted) {
@@ -104,40 +103,6 @@ class CreateUserPageState extends State<CreateUserPage> {
         if (mounted) {
           ErrorHandler.showError(context, "Error: $e");
         }
-      }
-    }
-  }
-
-  Future<void> handleUserCreation() async {
-    final BuildContext context = this.context;
-
-    try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
-      );
-
-      String uid = userCredential.user!.uid;
-
-      await _usersRef.child(uid).set({
-        'name': nameController.text,
-        'email': emailController.text,
-      });
-
-      if (mounted) {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const WorkoutPage(),
-          ),
-        );
-      }
-    } on FirebaseAuthException catch (e) {
-      handleFirebaseAuthError(e);
-    } catch (e) {
-      if (mounted) {
-        ErrorHandler.showError(context, "Error: $e");
       }
     }
   }

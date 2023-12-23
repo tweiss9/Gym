@@ -100,18 +100,19 @@ class SignInPageState extends State<SignInPage> {
           await FirebaseAuth.instance.signInWithCredential(credential);
 
       final User? user = userCredential.user;
-
       if (user != null) {
         await FirebaseDatabase.instance
             .ref()
             .child('users')
             .child(user.uid)
             .set({
-          'name': user.displayName,
-          'email': user.email,
+          'Account Information': {
+            'name': user.displayName,
+            'email': user.email
+          },
+          'Workouts': {'default': 'No workouts yet'}
         });
       }
-
       return userCredential;
     } catch (e) {
       if (mounted) {
