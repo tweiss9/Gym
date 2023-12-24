@@ -20,10 +20,7 @@ class CreateUserPageState extends State<CreateUserPage> {
   TextEditingController confirmPasswordController = TextEditingController();
 
   Map<String, String> errors = {};
-
   static const String _usersNode = 'users';
-  final DatabaseReference _usersRef =
-      FirebaseDatabase.instance.ref().child(_usersNode);
 
   @override
   void initState() {
@@ -81,12 +78,12 @@ class CreateUserPageState extends State<CreateUserPage> {
 
         String uid = userCredential.user!.uid;
 
-        await _usersRef.child(uid).set({
+        await FirebaseDatabase.instance.ref().child(_usersNode).child(uid).set({
           'Account Information': {
             'name': nameController.text,
             'email': emailController.text,
           },
-          'Workouts': {'default': 'No workouts yet'}
+          'Workouts': {}
         });
 
         if (mounted) {

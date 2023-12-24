@@ -110,7 +110,7 @@ class SignInPageState extends State<SignInPage> {
             'name': user.displayName,
             'email': user.email
           },
-          'Workouts': {'default': 'No workouts yet'}
+          'Workouts': {}
         });
       }
       return userCredential;
