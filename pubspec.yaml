@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  another_flushbar: ^1.12.30
   cupertino_icons: ^1.0.2
   firebase_auth: ^4.14.1
   firebase_core: ^2.23.0
