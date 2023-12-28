@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:gym/widgets/show_error.dart';
+import '../widgets/show_error.dart';
+import '../widgets/exercise.dart';
 import '../widgets/bottom_navigation.dart';
 
 class WorkoutPage extends StatefulWidget {
@@ -16,6 +17,7 @@ class WorkoutPage extends StatefulWidget {
 class WorkoutPageState extends State<WorkoutPage> {
   late TextEditingController workoutNameController;
   late TextEditingController editWorkoutNameController;
+  late TextEditingController exerciseController;
   String uid = FirebaseAuth.instance.currentUser!.uid;
   int _currentIndex = 2;
 
@@ -24,6 +26,7 @@ class WorkoutPageState extends State<WorkoutPage> {
     super.initState();
     workoutNameController = TextEditingController();
     editWorkoutNameController = TextEditingController();
+    exerciseController = TextEditingController();
   }
 
   @override
@@ -214,6 +217,144 @@ class WorkoutPageState extends State<WorkoutPage> {
     );
   }
 
+  void cancelWorkout() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Cancel Workout'),
+          content: const Text('Are you sure you want to cancel this workout?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Stay on Workout'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Cancel Workout'),
+              onPressed: () {
+                if (mounted) {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void createExercise(String workoutName) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Create an Exercise'),
+          content: TextField(
+            controller: exerciseController,
+            decoration: const InputDecoration(hintText: "Enter exercise name"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+                onPressed: () {
+                  addExerciseToWorkout(workoutName, exerciseController.text);
+                  exerciseController.clear();
+                },
+                child: const Text('Add'))
+          ],
+        );
+      },
+    );
+  }
+
+  Future<Map<Object?, Object?>> getExercises(String workoutName) async {
+    DatabaseReference workoutsRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(uid)
+        .child('Workouts')
+        .child(workoutName);
+    DatabaseEvent snapshot = await workoutsRef.once();
+    Map<Object?, Object?>? workouts =
+        snapshot.snapshot.value as Map<Object?, Object?>?;
+    if (workouts == null || workouts['default'] == 'No workouts Details yet') {
+      return {};
+    }
+    return workouts;
+  }
+
+  void addExerciseToWorkout(String workoutName, String exerciseName) async {
+    if (exerciseName == '') {
+      if (mounted) {
+        ErrorHandler.showError(context, 'Exercise name cannot be empty');
+      }
+      return;
+    }
+    DatabaseReference workoutRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(uid)
+        .child('Workouts')
+        .child(workoutName);
+
+    DatabaseEvent snapshot = await workoutRef.once();
+    Map<Object?, Object?>? workouts =
+        snapshot.snapshot.value as Map<Object?, Object?>?;
+    if (workouts!['default'] == 'No workouts Details yet') {
+      await workoutRef.child('default').remove();
+    }
+    await workoutRef.update({
+      exerciseName: {
+        'name': exerciseName,
+        'description': 'No description yet',
+      }
+    });
+    setState(() {});
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  void finishWorkout(String workoutName) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Finish Workout'),
+          content: const Text('Are you sure you want to finish this workout?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Stay on Workout'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Finish Workout'),
+              onPressed: () {
+                if (mounted) {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void showActiveWorkout(BuildContext context, String workoutName) {
     final ValueNotifier<String> workoutNameNotifier =
         ValueNotifier<String>(workoutName);
@@ -246,6 +387,7 @@ class WorkoutPageState extends State<WorkoutPage> {
               child: SingleChildScrollView(
                 controller: scrollController,
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(
                       width: 325,
@@ -290,12 +432,64 @@ class WorkoutPageState extends State<WorkoutPage> {
                         ),
                       ],
                     ),
+                    FutureBuilder<Map<Object?, Object?>>(
+                      future: getExercises(workoutName),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<Map<Object?, Object?>> snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        } else if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        } else if (snapshot.data == null ||
+                            snapshot.data!.isEmpty) {
+                          return const Text('No exercises yet');
+                        } else {
+                          return Flexible(
+                            child: SizedBox(
+                              height: 200,
+                              child: ListView.builder(
+                                itemCount: snapshot.data!.values.length,
+                                itemBuilder: (context, index) {
+                                  dynamic exercise =
+                                      snapshot.data!.values.elementAt(index);
+                                  return ExerciseWidget(
+                                    exercise: exercise,
+                                    workoutName: workoutName,
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                      ),
+                      onPressed: () {
+                        createExercise(workoutName);
+                      },
+                      child: const Text('Create Exercise',
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.green,
+                      ),
+                      onPressed: () {
+                        finishWorkout(workoutName);
+                      },
+                      child: const Text('Finish Workout',
+                          style: TextStyle(color: Colors.white)),
+                    ),
                     TextButton(
                       style: TextButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),
                       onPressed: () {
-                        Navigator.pop(context);
+                        cancelWorkout();
                       },
                       child: const Text('Cancel',
                           style: TextStyle(color: Colors.white)),
