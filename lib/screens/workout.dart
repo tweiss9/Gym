@@ -384,55 +384,54 @@ class WorkoutPageState extends State<WorkoutPage> {
                   ),
                 ],
               ),
-              child: SingleChildScrollView(
-                controller: scrollController,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(
-                      width: 325,
-                      child: Divider(
-                        color: Colors.grey,
-                        thickness: 4.0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 325,
+                    child: Divider(
+                      color: Colors.grey,
+                      thickness: 4.0,
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Color.fromARGB(255, 245, 98, 88),
+                        ),
+                        onPressed: () {
+                          deleteWorkout(workoutName);
+                        },
                       ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete,
-                            color: Color.fromARGB(255, 245, 98, 88),
-                          ),
-                          onPressed: () {
-                            deleteWorkout(workoutName);
-                          },
-                        ),
-                        const Spacer(),
-                        ValueListenableBuilder<String>(
-                          valueListenable: workoutNameNotifier,
-                          builder: (context, value, child) {
-                            return Text(
-                              value,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            );
-                          },
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {
-                            editWorkoutNamePopup(
-                                innerContext, workoutName, workoutNameNotifier);
-                          },
-                        ),
-                      ],
-                    ),
-                    FutureBuilder<Map<Object?, Object?>>(
+                      const Spacer(),
+                      ValueListenableBuilder<String>(
+                        valueListenable: workoutNameNotifier,
+                        builder: (context, value, child) {
+                          return Text(
+                            value,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        },
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () {
+                          editWorkoutNamePopup(
+                              innerContext, workoutName, workoutNameNotifier);
+                        },
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: FutureBuilder<Map<Object?, Object?>>(
                       future: getExercises(workoutName),
                       builder: (BuildContext context,
                           AsyncSnapshot<Map<Object?, Object?>> snapshot) {
@@ -445,57 +444,70 @@ class WorkoutPageState extends State<WorkoutPage> {
                             snapshot.data!.isEmpty) {
                           return const Text('No exercises yet');
                         } else {
-                          return Flexible(
-                            child: SizedBox(
-                              height: 200,
-                              child: ListView.builder(
-                                itemCount: snapshot.data!.values.length,
-                                itemBuilder: (context, index) {
-                                  dynamic exercise =
-                                      snapshot.data!.values.elementAt(index);
-                                  return ExerciseWidget(
-                                    exercise: exercise,
-                                    workoutName: workoutName,
-                                  );
-                                },
-                              ),
+                          return SizedBox(
+                            height: 200,
+                            child: ListView.builder(
+                              itemCount: snapshot.data!.values.length,
+                              itemBuilder: (context, index) {
+                                dynamic exercise =
+                                    snapshot.data!.values.elementAt(index);
+                                return ExerciseWidget(
+                                  exercise: exercise,
+                                  workoutName: workoutName,
+                                );
+                              },
                             ),
                           );
                         }
                       },
                     ),
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                      ),
-                      onPressed: () {
-                        createExercise(workoutName);
-                      },
-                      child: const Text('Create Exercise',
-                          style: TextStyle(color: Colors.white)),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(8.0),
+                      color: Colors.white,
+                      
+                        child: Row(
+                          children: [
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                              ),
+                              onPressed: () {
+                                createExercise(workoutName);
+                              },
+                              child: const Text('Create Exercise',
+                                  style: TextStyle(color: Colors.white)),
+                            ),
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                backgroundColor: Colors.green,
+                              ),
+                              onPressed: () {
+                                finishWorkout(workoutName);
+                              },
+                              child: const Text('Finish Workout',
+                                  style: TextStyle(color: Colors.white)),
+                            ),
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                backgroundColor: Colors.red,
+                              ),
+                              onPressed: () {
+                                cancelWorkout();
+                              },
+                              child: const Text('Cancel',
+                                  style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        ),
+                      
                     ),
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.green,
-                      ),
-                      onPressed: () {
-                        finishWorkout(workoutName);
-                      },
-                      child: const Text('Finish Workout',
-                          style: TextStyle(color: Colors.white)),
-                    ),
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.red,
-                      ),
-                      onPressed: () {
-                        cancelWorkout();
-                      },
-                      child: const Text('Cancel',
-                          style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           },
