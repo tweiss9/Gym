@@ -367,147 +367,147 @@ class WorkoutPageState extends State<WorkoutPage> {
           initialChildSize: 0.95,
           builder:
               (BuildContext innerContext, ScrollController scrollController) {
-            return Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(10),
-                  topRight: Radius.circular(10),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey,
-                    spreadRadius: 5,
-                    blurRadius: 7,
-                    offset: Offset(0, 3),
+            return SingleChildScrollView(
+              controller: scrollController,
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    topRight: Radius.circular(10),
                   ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(
-                    width: 325,
-                    child: Divider(
+                  boxShadow: [
+                    BoxShadow(
                       color: Colors.grey,
-                      thickness: 4.0,
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: Offset(0, 3),
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete,
-                          color: Color.fromARGB(255, 245, 98, 88),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 325,
+                      child: Divider(
+                        color: Colors.grey,
+                        thickness: 4.0,
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete,
+                            color: Color.fromARGB(255, 245, 98, 88),
+                          ),
+                          onPressed: () {
+                            deleteWorkout(workoutName);
+                          },
                         ),
-                        onPressed: () {
-                          deleteWorkout(workoutName);
-                        },
-                      ),
-                      const Spacer(),
-                      ValueListenableBuilder<String>(
-                        valueListenable: workoutNameNotifier,
-                        builder: (context, value, child) {
-                          return Text(
-                            value,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          );
-                        },
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () {
-                          editWorkoutNamePopup(
-                              innerContext, workoutName, workoutNameNotifier);
-                        },
-                      ),
-                    ],
-                  ),
-                  Expanded(
-                    child: FutureBuilder<Map<Object?, Object?>>(
-                      future: getExercises(workoutName),
-                      builder: (BuildContext context,
-                          AsyncSnapshot<Map<Object?, Object?>> snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const CircularProgressIndicator();
-                        } else if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
-                        } else if (snapshot.data == null ||
-                            snapshot.data!.isEmpty) {
-                          return const Text('No exercises yet');
-                        } else {
-                          return SizedBox(
-                            height: 200,
-                            child: ListView.builder(
-                              itemCount: snapshot.data!.values.length,
-                              itemBuilder: (context, index) {
-                                dynamic exercise =
-                                    snapshot.data!.values.elementAt(index);
-                                return ExerciseWidget(
-                                  exercise: exercise,
-                                  workoutName: workoutName,
-                                );
-                              },
-                            ),
-                          );
-                        }
-                      },
+                        const Spacer(),
+                        ValueListenableBuilder<String>(
+                          valueListenable: workoutNameNotifier,
+                          builder: (context, value, child) {
+                            return Text(
+                              value,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            );
+                          },
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () {
+                            editWorkoutNamePopup(
+                                innerContext, workoutName, workoutNameNotifier);
+                          },
+                        ),
+                      ],
                     ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
+                    SingleChildScrollView(
+                      controller: scrollController,
+                      child: FutureBuilder<Map<Object?, Object?>>(
+                        future: getExercises(workoutName),
+                        builder: (BuildContext context,
+                            AsyncSnapshot<Map<Object?, Object?>> snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}');
+                          } else if (snapshot.data == null ||
+                              snapshot.data!.isEmpty) {
+                            return const Text('No exercises yet');
+                          } else {
+                            List<ExerciseWidget> exerciseWidgets = [];
+                            Map<Object?, Object?> exerciseMap = snapshot.data!;
+                            print(exerciseMap);
+                            for (var exerciseData in exerciseMap.entries) {
+                              print(exerciseData);
+                              exerciseWidgets.add(ExerciseWidget(
+                                exercise:
+                                    exerciseData.value as Map<Object?, Object?>,
+                              ));
+                            }
+                            if (exerciseWidgets.isNotEmpty) {
+                              return Column(
+                                children: exerciseWidgets,
+                              );
+                            } else {
+                              return const Text('LAST');
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                    Container(
                       padding: const EdgeInsets.all(8.0),
                       color: Colors.white,
-                      
-                        child: Row(
-                          children: [
-                            TextButton(
-                              style: TextButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                              ),
-                              onPressed: () {
-                                createExercise(workoutName);
-                              },
-                              child: const Text('Create Exercise',
-                                  style: TextStyle(color: Colors.white)),
+                      child: Row(
+                        children: [
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.blue,
                             ),
-                            TextButton(
-                              style: TextButton.styleFrom(
-                                backgroundColor: Colors.green,
-                              ),
-                              onPressed: () {
-                                finishWorkout(workoutName);
-                              },
-                              child: const Text('Finish Workout',
-                                  style: TextStyle(color: Colors.white)),
+                            onPressed: () {
+                              createExercise(workoutName);
+                            },
+                            child: const Text('Create Exercise',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.green,
                             ),
-                            TextButton(
-                              style: TextButton.styleFrom(
-                                backgroundColor: Colors.red,
-                              ),
-                              onPressed: () {
-                                cancelWorkout();
-                              },
-                              child: const Text('Cancel',
-                                  style: TextStyle(color: Colors.white)),
+                            onPressed: () {
+                              finishWorkout(workoutName);
+                            },
+                            child: const Text('Finish Workout',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.red,
                             ),
-                          ],
-                        ),
-                      
+                            onPressed: () {
+                              cancelWorkout();
+                            },
+                            child: const Text('Cancel',
+                                style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
