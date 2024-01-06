@@ -438,10 +438,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                         future: getExercises(workoutName),
                         builder: (BuildContext context,
                             AsyncSnapshot<Map<Object?, Object?>> snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const CircularProgressIndicator();
-                          } else if (snapshot.hasError) {
+                          if (snapshot.hasError) {
                             return Text('Error: ${snapshot.error}');
                           } else if (snapshot.data == null ||
                               snapshot.data!.isEmpty) {
@@ -449,21 +446,15 @@ class WorkoutPageState extends State<WorkoutPage> {
                           } else {
                             List<ExerciseWidget> exerciseWidgets = [];
                             Map<Object?, Object?> exerciseMap = snapshot.data!;
-                            print(exerciseMap);
                             for (var exerciseData in exerciseMap.entries) {
-                              print(exerciseData);
                               exerciseWidgets.add(ExerciseWidget(
-                                exercise:
+                                exerciseEntry:
                                     exerciseData.value as Map<Object?, Object?>,
                               ));
                             }
-                            if (exerciseWidgets.isNotEmpty) {
-                              return Column(
-                                children: exerciseWidgets,
-                              );
-                            } else {
-                              return const Text('LAST');
-                            }
+                            return Column(
+                              children: exerciseWidgets,
+                            );
                           }
                         },
                       ),

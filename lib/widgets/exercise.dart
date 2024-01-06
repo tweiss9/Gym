@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class ExerciseWidget extends StatefulWidget {
-  final Map<Object?, Object?> exercise;
+  final Map<Object?, Object?> exerciseEntry;
 
-  const ExerciseWidget({super.key, required this.exercise});
+  const ExerciseWidget({super.key, required this.exerciseEntry});
 
   @override
   ExerciseWidgetState createState() => ExerciseWidgetState();
@@ -14,15 +14,17 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
   int weight = 0;
   int reps = 0;
   bool isHighlighted = false;
+  late String name;
+  late Map exerciseMap;
 
   @override
   void initState() {
     super.initState();
-    // Map<Object?, Object?> exercise = widget.exercise;
+    Map exerciseMap = widget.exerciseEntry;
+    name = exerciseMap['name'];
     _rows = <_Row>[
       _Row(1, 2, 3, false),
       _Row(2, 3, 4, false),
-      _Row(3, 4, 5, false),
     ];
   }
 
@@ -37,7 +39,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
             Container(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                'Table Header',
+                name,
                 style: Theme.of(context).textTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),
@@ -46,7 +48,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
               width: 350,
               child: DataTable(
                 columnSpacing: 60,
-                headingRowHeight: 40, 
+                headingRowHeight: 40,
                 dataRowMinHeight: 20,
                 dataRowMaxHeight: 30,
                 columns: const [
@@ -84,26 +86,26 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
             if (row.isSelected) {
               return Colors.green;
             }
-            return null; 
+            return null;
           },
         ),
         cells: [
           DataCell(
             Align(
               alignment: Alignment.center,
-              child: Text(row.valueA.toString()),
+              child: Text(row.setValue.toString()),
             ),
           ),
           DataCell(
             Align(
               alignment: Alignment.center,
-              child: Text(row.valueB.toString()),
+              child: Text(row.repsValue.toString()),
             ),
           ),
           DataCell(
             Align(
               alignment: Alignment.center,
-              child: Text(row.valueC.toString()),
+              child: Text(row.weightValue.toString()),
             ),
           ),
           DataCell(
@@ -118,6 +120,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                     });
                   }
                 },
+                activeColor: Colors.transparent,
               ),
             ),
           ),
@@ -125,19 +128,18 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
       );
     }).toList();
   }
-
 }
 
 class _Row {
   _Row(
-    this.valueA,
-    this.valueB,
-    this.valueC,
+    this.setValue,
+    this.repsValue,
+    this.weightValue,
     this.isSelected,
   );
 
-  final int valueA;
-  final int valueB;
-  final int valueC;
+  final int setValue;
+  final int repsValue;
+  final int weightValue;
   bool isSelected;
 }
