@@ -85,7 +85,12 @@ class WorkoutPageState extends State<WorkoutPage> {
                 Navigator.of(context).pop();
               },
             ),
-            TextButton(onPressed: createWorkout, child: const Text('Add'))
+            TextButton(
+              child: const Text('Add'),
+              onPressed: () async {
+                createWorkout();
+              },
+            )
           ],
         );
       },
@@ -141,18 +146,15 @@ class WorkoutPageState extends State<WorkoutPage> {
             TextButton(
               child: const Text('Cancel'),
               onPressed: () {
+                editWorkoutNameController.clear();
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
               child: const Text('Update'),
               onPressed: () async {
-                String? newWorkoutName = editWorkoutNameController.text.trim();
-                bool success =
-                    await editWorkoutName(newWorkoutName, workoutName, context);
-                if (success) {
-                  workoutNameNotifier.value = newWorkoutName;
-                }
+                editWorkoutName(editWorkoutNameController.text, workoutName,
+                    context, workoutNameNotifier);
               },
             ),
           ],
@@ -161,12 +163,13 @@ class WorkoutPageState extends State<WorkoutPage> {
     );
   }
 
-  Future<bool> editWorkoutName(String newWorkoutName, String oldWorkoutName,
-      BuildContext dialogContext) async {
+  void editWorkoutName(String newWorkoutName, String oldWorkoutName,
+      BuildContext dialogContext, workoutNameNotifier) async {
+    String? newWorkoutName = editWorkoutNameController.text.trim();
     if (newWorkoutName == '') {
       if (mounted) {
         ErrorHandler.showError(dialogContext, 'Workout name cannot be empty');
-        return false;
+        return;
       }
     }
     List<String>? workouts = await getWorkoutNames();
@@ -174,7 +177,7 @@ class WorkoutPageState extends State<WorkoutPage> {
       if (mounted) {
         ErrorHandler.showError(dialogContext, 'Workout already exists');
       }
-      return false;
+      return;
     } else {
       final ref = FirebaseDatabase.instance
           .ref()
@@ -186,13 +189,14 @@ class WorkoutPageState extends State<WorkoutPage> {
       await ref.child(newWorkoutName).set(value);
       await ref.child(oldWorkoutName).remove();
       oldWorkoutName = newWorkoutName;
+      workoutNameNotifier.value = newWorkoutName;
       if (mounted) {
         Navigator.of(dialogContext).pop();
       }
       setState(() {});
     }
     editWorkoutNameController.clear();
-    return true;
+    return;
   }
 
   void deleteWorkoutPopup(String workoutName) async {
@@ -283,14 +287,16 @@ class WorkoutPageState extends State<WorkoutPage> {
             TextButton(
               child: const Text('Cancel'),
               onPressed: () {
+                exerciseController.clear();
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-                onPressed: () {
-                  createExercise(workoutName, exerciseController.text);
-                },
-                child: const Text('Add'))
+              child: const Text('Add'),
+              onPressed: () {
+                createExercise(workoutName, exerciseController.text);
+              },
+            )
           ],
         );
       },
@@ -351,11 +357,8 @@ class WorkoutPageState extends State<WorkoutPage> {
             ),
             TextButton(
               child: const Text('Finish Workout'),
-              onPressed: () {
-                if (mounted) {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop();
-                }
+              onPressed: () async {
+                finishWorkout();
               },
             ),
           ],
@@ -365,6 +368,7 @@ class WorkoutPageState extends State<WorkoutPage> {
   }
 
   void finishWorkout() {
+    Navigator.of(context).pop();
     Navigator.of(context).pop();
   }
 
