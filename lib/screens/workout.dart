@@ -14,6 +14,64 @@ class WorkoutPage extends StatefulWidget {
   WorkoutPageState createState() => WorkoutPageState();
 }
 
+class Popup {
+  final String title;
+  final String contentController;
+  final Function(String?) onOkPressed;
+  final String? workoutName;
+  final String okButtonText;
+  final String cancelButtonText;
+  final bool isNumber;
+  final bool isText;
+  final TextEditingController nameController = TextEditingController();
+
+  Popup(this.isNumber, this.isText,
+      {required this.title,
+      required this.contentController,
+      required this.onOkPressed,
+      this.workoutName,
+      required this.okButtonText,
+      required this.cancelButtonText});
+
+  void show(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: isNumber || isText
+              ? (isNumber
+                  ? TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(hintText: contentController),
+                      keyboardType: TextInputType.number,
+                    )
+                  : TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(hintText: contentController),
+                    ))
+              : Text(contentController),
+          actions: <Widget>[
+            TextButton(
+              child: Text(cancelButtonText),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text(okButtonText),
+              onPressed: () {
+                onOkPressed(nameController.text);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class WorkoutPageState extends State<WorkoutPage> {
   late TextEditingController workoutNameController;
   late TextEditingController editWorkoutNameController;
@@ -66,49 +124,20 @@ class WorkoutPageState extends State<WorkoutPage> {
     return workoutNames;
   }
 
-  void createWorkoutPopup() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Create a Workout'),
-          content: TextField(
-            controller: workoutNameController,
-            decoration: const InputDecoration(hintText: "Enter workout name"),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                workoutNameController.clear();
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Add'),
-              onPressed: () async {
-                createWorkout();
-              },
-            )
-          ],
-        );
-      },
-    );
-  }
-
-  void createWorkout() async {
-    String? workoutName = workoutNameController.text.trim();
+  void createWorkout(String? workoutNameUntrimmed) async {
+    String workoutName = workoutNameUntrimmed?.trim() ?? '';
     List<String>? workouts = await getWorkoutNames();
     if (workoutName == '') {
       if (mounted) {
         ErrorHandler.showError(context, 'Workout name cannot be empty');
       }
+      return;
     } else {
       if (workouts!.contains(workoutName)) {
         if (mounted) {
           ErrorHandler.showError(context, 'Workout already exists');
         }
+        return;
       } else {
         await FirebaseDatabase.instance
             .ref()
@@ -118,12 +147,9 @@ class WorkoutPageState extends State<WorkoutPage> {
             .update({
           workoutName: {'default': 'No workouts Details yet'}
         });
-
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
         setState(() {});
         workoutNameController.clear();
+        return;
       }
     }
   }
@@ -538,7 +564,17 @@ class WorkoutPageState extends State<WorkoutPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               ElevatedButton(
-                onPressed: createWorkoutPopup,
+                onPressed: () {
+                  Popup(
+                    false,
+                    true,
+                    title: 'Create a Workout',
+                    contentController: 'Enter workout name',
+                    onOkPressed: (workoutName) => createWorkout(workoutName),
+                    okButtonText: 'Add',
+                    cancelButtonText: 'Cancel',
+                  ).show(context);
+                },
                 child: const Text('Create a Workout'),
               ),
               const SizedBox(height: 20.0),
