@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/popup.dart';
 
 class _Row {
   _Row(
@@ -14,6 +15,18 @@ class _Row {
   bool isSelected;
 }
 
+class ExerciseSet {
+  ExerciseSet({
+    required this.number,
+    required this.reps,
+    required this.weight,
+  });
+
+  final int number;
+  final int reps;
+  final int weight;
+}
+
 class ExerciseWidget extends StatefulWidget {
   final Map<Object?, Object?> exerciseEntry;
 
@@ -26,26 +39,59 @@ class ExerciseWidget extends StatefulWidget {
 class ExerciseWidgetState extends State<ExerciseWidget> {
   late List<_Row> _rows;
   late Map exerciseMap;
+  late ExerciseSet exerciseSet;
   late String name;
-  late int setNumber;
-  late int weight;
-  late int reps;
   bool isHighlighted = false;
 
   @override
   void initState() {
     super.initState();
-    Map exerciseMap = widget.exerciseEntry;
+    exerciseMap = widget.exerciseEntry;
     name = exerciseMap['name'];
-    setNumber = exerciseMap['sets']['number'];
-    reps = exerciseMap['sets']['reps'];
-    weight = exerciseMap['sets']['weight'];
+    exerciseSet = ExerciseSet(
+      number: exerciseMap['sets']['number'],
+      reps: exerciseMap['sets']['reps'],
+      weight: exerciseMap['sets']['weight'],
+    );
     _rows = <_Row>[
-      _Row(setNumber, reps, weight, false),
+      _Row(exerciseSet.number, exerciseSet.reps, exerciseSet.weight, false),
     ];
   }
 
-  List<DataRow> populateRows() {
+  List<DataColumn> createDataColumns() {
+    return [
+      DataColumn(
+        label: Container(
+          alignment: Alignment.center,
+          width: 25,
+          child: const Text('Set'),
+        ),
+      ),
+      DataColumn(
+        label: Container(
+          alignment: Alignment.center,
+          width: 50,
+          child: const Text('Rep'),
+        ),
+      ),
+      DataColumn(
+        label: Container(
+          alignment: Alignment.center,
+          width: 50,
+          child: const Text('lbs'),
+        ),
+      ),
+      DataColumn(
+        label: Container(
+          alignment: Alignment.center,
+          width: 50,
+          child: const Text('\u2713'),
+        ),
+      ),
+    ];
+  }
+
+  List<DataRow> createDataRows() {
     return _rows.map((row) {
       return DataRow(
         color: MaterialStateProperty.resolveWith<Color?>(
@@ -64,125 +110,104 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
           ),
           DataCell(
             Center(
-              child: TextButton(
-                onPressed: () {
-                  editRepsPopup(context);
+              child: GestureDetector(
+                onTap: () {
+                  Popup(
+                    true,
+                    false,
+                    title: 'Edit Reps',
+                    contentController: 'Enter the number of reps',
+                    onOkPressed: ({String? textInput, String? workout}) {
+                      editReps();
+                    },
+                    okButtonText: 'OK',
+                    cancelButtonText: 'Cancel',
+                  ).show(context);
                 },
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.grey,
-                  minimumSize: const Size(10, 60),
+                child: Container(
+                  alignment: Alignment.center,
+                  height: 40,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Text(
+                    row.repsValue.toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-                child: Text(row.repsValue.toString()),
               ),
             ),
           ),
           DataCell(
             Center(
-              child: TextButton(
-                onPressed: () {
-                  editWeightPopup(context);
+              child: GestureDetector(
+                onTap: () {
+                  Popup(
+                    true,
+                    false,
+                    title: 'Edit Weight',
+                    contentController: 'Enter the weight',
+                    onOkPressed: ({String? textInput, String? workout}) {
+                      editWeight();
+                    },
+                    okButtonText: 'OK',
+                    cancelButtonText: 'Cancel',
+                  ).show(context);
                 },
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.grey,
-                  minimumSize: const Size(10, 60),
+                child: Container(
+                  alignment: Alignment.center,
+                  height: 40,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Text(
+                    row.weightValue.toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-                child: Text(row.weightValue.toString()),
               ),
             ),
           ),
           DataCell(
-            Center(
-              child: Container(
-                alignment: Alignment.center,
-                child: Checkbox(
-                  value: row.isSelected,
-                  onChanged: (bool? value) {
-                    if (value != null) {
-                      setState(() {
-                        row.isSelected = value;
-                      });
-                    }
-                  },
-                  activeColor: Colors.transparent,
-                ),
-              ),
+            Checkbox(
+              value: row.isSelected,
+              onChanged: (bool? value) {
+                if (value != null) {
+                  setState(() {
+                    row.isSelected = value;
+                  });
+                }
+              },
+              activeColor: Colors.transparent,
             ),
-          ),
+          )
         ],
       );
     }).toList();
   }
 
-  void editRepsPopup(context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Edit Reps'),
-          content: const TextField(
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: 'Enter the number of reps',
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                editReps();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+  void editReps() {}
 
-  void editWeightPopup(context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Edit Weight'),
-          content: const TextField(
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: 'Enter the weight',
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                editWeight();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+  void editWeight() {}
 
-  void editReps() {
-    Navigator.of(context).pop();
-  }
-
-  void editWeight() {
-    Navigator.of(context).pop();
+  void addSet() {
+    setState(() {
+      _rows.add(
+        _Row(exerciseSet.number, exerciseSet.reps, exerciseSet.weight, false),
+      );
+    });
   }
 
   @override
@@ -197,29 +222,38 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             DataTable(
-              columnSpacing: 40,
               headingRowHeight: 40,
               dataRowMinHeight: 20,
               dataRowMaxHeight: 70,
-              columns: const [
-                DataColumn(
-                  label: Text('Set'),
-                  numeric: true,
+              columns: createDataColumns(),
+              rows: createDataRows(),
+            ),
+            GestureDetector(
+              onTap: () {
+                addSet();
+              },
+              child: Container(
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: Colors.grey,
+                      width: 1.0,
+                    ),
+                  ),
                 ),
-                DataColumn(
-                  label: Text('Rep'),
-                  numeric: true,
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10.0),
+                      child: Text(
+                        '+ Add Set',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ],
                 ),
-                DataColumn(
-                  label: Text('lbs'),
-                  numeric: true,
-                ),
-                DataColumn(
-                  label: Text('\u2713'),
-                  numeric: false,
-                ),
-              ],
-              rows: populateRows(),
+              ),
             ),
           ],
         ),
