@@ -163,15 +163,17 @@ class WorkoutPageState extends State<WorkoutPage> {
       context: context,
       isScrollControlled: true,
       builder: (BuildContext context) {
+        final bottomSheetController = ScrollController();
         return DraggableScrollableSheet(
           expand: false,
           initialChildSize: 0.95,
           builder:
               (BuildContext innerContext, ScrollController scrollController) {
             return SingleChildScrollView(
-              controller: scrollController,
+              controller: bottomSheetController,
               child: Container(
                 width: double.infinity,
+                height: MediaQuery.of(context).size.height * 0.95,
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
@@ -191,7 +193,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(
-                      width: 325,
+                      width: 300,
                       child: Divider(
                         color: Colors.grey,
                         thickness: 4.0,
@@ -263,8 +265,8 @@ class WorkoutPageState extends State<WorkoutPage> {
                     ValueListenableBuilder<String>(
                       valueListenable: workoutNameNotifier,
                       builder: (context, workoutName, child) {
-                        return SingleChildScrollView(
-                          controller: scrollController,
+                        final contentController = ScrollController();
+                        return Expanded(
                           child: FutureBuilder<Map<Object?, Object?>>(
                             future: getExercises(workoutName),
                             builder: (BuildContext context,
@@ -284,8 +286,12 @@ class WorkoutPageState extends State<WorkoutPage> {
                                         as Map<Object?, Object?>,
                                   ));
                                 }
-                                return Column(
-                                  children: exerciseWidgets,
+                                return Flexible(
+                                  child: ListView(
+                                    controller:
+                                        contentController, // Use the contentController
+                                    children: exerciseWidgets,
+                                  ),
                                 );
                               }
                             },
