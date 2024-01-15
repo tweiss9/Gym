@@ -17,7 +17,9 @@ class WorkoutPageState extends State<WorkoutPage> {
   String uid = FirebaseAuth.instance.currentUser!.uid;
   int _currentIndex = 2;
   ValueNotifier<String> workoutNameNotifier = ValueNotifier<String>('');
-
+  bool isWorkoutActive = false;
+  bool isWorkoutShowing = false;
+  String currentWorkoutName = '';
   @override
   void initState() {
     super.initState();
@@ -102,6 +104,7 @@ class WorkoutPageState extends State<WorkoutPage> {
       await ref.child(newWorkoutName).set(value);
       await ref.child(oldWorkoutName).remove();
       oldWorkoutName = newWorkoutName;
+      currentWorkoutName = newWorkoutName;
       workoutNameNotifier.value = newWorkoutName;
       setState(() {});
     }
@@ -124,6 +127,8 @@ class WorkoutPageState extends State<WorkoutPage> {
 
   void cancelWorkout() {
     Navigator.of(context).pop();
+    isWorkoutActive = false;
+    currentWorkoutName = '';
   }
 
   void createExercise(String workoutName, String exerciseName) async {
@@ -155,28 +160,61 @@ class WorkoutPageState extends State<WorkoutPage> {
 
   void finishWorkout() {
     Navigator.of(context).pop();
+    isWorkoutActive = false;
+    currentWorkoutName = '';
   }
 
-  void showActiveWorkout(BuildContext context, String workoutName) {
-    workoutNameNotifier.value = workoutName;
+  void startWorkout(BuildContext context, String workoutName) {
+    isWorkoutShowing = true;
+    isWorkoutActive = true;
+    currentWorkoutName = workoutName;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (BuildContext context) {
-        final bottomSheetController = ScrollController();
         return DraggableScrollableSheet(
           expand: false,
           initialChildSize: 0.95,
           builder:
               (BuildContext innerContext, ScrollController scrollController) {
             return SingleChildScrollView(
-              controller: bottomSheetController,
               child: buildBottomSheet(workoutName),
             );
           },
         );
       },
-    );
+    ).whenComplete(() {
+      setState(() {
+        isWorkoutShowing = false;
+        currentWorkoutName = workoutName;
+      });
+    });
+  }
+
+  void continueWorkout(BuildContext context, String workoutName) {
+    isWorkoutShowing = true;
+    isWorkoutActive = true;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.95,
+          builder:
+              (BuildContext innerContext, ScrollController scrollController) {
+            return SingleChildScrollView(
+              child: buildBottomSheet(workoutName),
+            );
+          },
+        );
+      },
+    ).whenComplete(() {
+      setState(() {
+        isWorkoutShowing = false;
+        currentWorkoutName = workoutName;
+      });
+    });
   }
 
   Widget buildBottomSheet(String workoutName) {
@@ -248,7 +286,7 @@ class WorkoutPageState extends State<WorkoutPage> {
               valueListenable: workoutNameNotifier,
               builder: (context, value, child) {
                 return Text(
-                  value,
+                  workoutName,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 24,
@@ -287,7 +325,7 @@ class WorkoutPageState extends State<WorkoutPage> {
   Widget buildExerciseList(String workoutName) {
     return ValueListenableBuilder<String>(
       valueListenable: workoutNameNotifier,
-      builder: (context, workoutName, child) {
+      builder: (context, value, child) {
         final contentController = ScrollController();
         return Expanded(
           child: FutureBuilder<Map<Object?, Object?>>(
@@ -400,58 +438,94 @@ class WorkoutPageState extends State<WorkoutPage> {
         title: const Text('Workout Page'),
         automaticallyImplyLeading: false,
       ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  Popup(
-                    false,
-                    true,
-                    title: 'Create a Workout',
-                    contentController: 'Enter workout name',
-                    onOkPressed: ({String? textInput, String? workout}) {
-                      createWorkout(textInput!);
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Popup(
+                        false,
+                        true,
+                        title: 'Create a Workout',
+                        contentController: 'Enter workout name',
+                        onOkPressed: ({String? textInput, String? workout}) {
+                          createWorkout(textInput!);
+                        },
+                        okButtonText: 'Add',
+                        cancelButtonText: 'Cancel',
+                      ).show(context);
                     },
-                    okButtonText: 'Add',
-                    cancelButtonText: 'Cancel',
-                  ).show(context);
-                },
-                child: const Text('Create a Workout'),
-              ),
-              const SizedBox(height: 20.0),
-              FutureBuilder<List<String>?>(
-                future: getWorkoutNames(),
-                builder: (BuildContext context,
-                    AsyncSnapshot<List<String>?> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircularProgressIndicator();
-                  } else {
-                    return snapshot.data != null && snapshot.data!.isEmpty
-                        ? const Text('No Saved Workouts, Create A Workout')
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: snapshot.data!.length,
-                            itemBuilder: (context, index) {
-                              return ElevatedButton(
-                                onPressed: () {
-                                  showActiveWorkout(
-                                      context, snapshot.data![index]);
-                                },
-                                child: Text(snapshot.data![index]),
+                    child: const Text('Create a Workout'),
+                  ),
+                  const SizedBox(height: 20.0),
+                  FutureBuilder<List<String>?>(
+                    future: getWorkoutNames(),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<List<String>?> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const CircularProgressIndicator();
+                      } else {
+                        return snapshot.data != null && snapshot.data!.isEmpty
+                            ? const Text('No Saved Workouts, Create A Workout')
+                            : Column(
+                                children: [
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: snapshot.data!.length,
+                                    itemBuilder: (context, index) {
+                                      return ElevatedButton(
+                                        onPressed: () {
+                                          startWorkout(
+                                              context, snapshot.data![index]);
+                                        },
+                                        child: Text(snapshot.data![index]),
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 16.0),
+                                ],
                               );
-                            },
-                          );
-                  }
-                },
+                      }
+                    },
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+          if (isWorkoutActive && !isWorkoutShowing)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                margin:
+                    const EdgeInsets.only(bottom: kBottomNavigationBarHeight),
+                width: MediaQuery.of(context).size.width - 32,
+                child: GestureDetector(
+                  onTap: () {
+                    continueWorkout(context, currentWorkoutName);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8.0),
+                    decoration: BoxDecoration(
+                      color: Colors.blue,
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: Text(
+                      "Continue Workout: $currentWorkoutName",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
       bottomNavigationBar: CustomBottomNavigation(
         currentIndex: _currentIndex,
