@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/show_error.dart';
 import '../widgets/exercise.dart';
 import '../widgets/bottom_navigation.dart';
@@ -24,12 +25,20 @@ class WorkoutPageState extends State<WorkoutPage> {
   void initState() {
     super.initState();
     workoutNameNotifier = ValueNotifier<String>('');
+    loadWorkoutState();
   }
 
   @override
   void dispose() {
     workoutNameNotifier.dispose();
     super.dispose();
+  }
+
+  Future<void> loadWorkoutState() async {
+    SharedPreferences preference = await SharedPreferences.getInstance();
+    setState(() {
+      isWorkoutActive = preference.getBool('isWorkoutActive') ?? false;
+    });
   }
 
   Future<Map<Object?, Object?>> getExercises(String workoutName) async {
@@ -122,13 +131,20 @@ class WorkoutPageState extends State<WorkoutPage> {
     if (mounted) {
       Navigator.of(context).pop();
     }
+    isWorkoutShowing = false;
+    isWorkoutActive = false;
+    SharedPreferences preference = await SharedPreferences.getInstance();
+    preference.setBool('isWorkoutActive', isWorkoutActive);
     setState(() {});
   }
 
-  void cancelWorkout() {
+  void cancelWorkout() async {
     Navigator.of(context).pop();
-    isWorkoutActive = false;
     currentWorkoutName = '';
+    isWorkoutShowing = false;
+    isWorkoutActive = false;
+    SharedPreferences preference = await SharedPreferences.getInstance();
+    preference.setBool('isWorkoutActive', isWorkoutActive);
   }
 
   void createExercise(String workoutName, String exerciseName) async {
@@ -158,42 +174,47 @@ class WorkoutPageState extends State<WorkoutPage> {
     setState(() {});
   }
 
-  void finishWorkout() {
+  void finishWorkout() async {
     Navigator.of(context).pop();
-    isWorkoutActive = false;
     currentWorkoutName = '';
+    isWorkoutActive = false;
+    SharedPreferences preference = await SharedPreferences.getInstance();
+    preference.setBool('isWorkoutActive', isWorkoutActive);
   }
 
-  void startWorkout(BuildContext context, String workoutName) {
+  void startWorkout(BuildContext context, String workoutName) async {
     isWorkoutShowing = true;
     isWorkoutActive = true;
+    SharedPreferences preference = await SharedPreferences.getInstance();
+    preference.setBool('isWorkoutActive', isWorkoutActive);
     currentWorkoutName = workoutName;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.95,
-          builder:
-              (BuildContext innerContext, ScrollController scrollController) {
-            return SingleChildScrollView(
-              child: buildBottomSheet(workoutName),
-            );
-          },
-        );
-      },
-    ).whenComplete(() {
-      setState(() {
-        isWorkoutShowing = false;
-        currentWorkoutName = workoutName;
+    if (mounted) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (BuildContext context) {
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.95,
+            builder:
+                (BuildContext innerContext, ScrollController scrollController) {
+              return SingleChildScrollView(
+                child: buildBottomSheet(workoutName),
+              );
+            },
+          );
+        },
+      ).whenComplete(() {
+        setState(() {
+          isWorkoutShowing = false;
+          currentWorkoutName = workoutName;
+        });
       });
-    });
+    }
   }
 
   void continueWorkout(BuildContext context, String workoutName) {
     isWorkoutShowing = true;
-    isWorkoutActive = true;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
