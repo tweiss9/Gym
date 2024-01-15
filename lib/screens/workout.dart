@@ -286,12 +286,9 @@ class WorkoutPageState extends State<WorkoutPage> {
                                         as Map<Object?, Object?>,
                                   ));
                                 }
-                                return Flexible(
-                                  child: ListView(
-                                    controller:
-                                        contentController, // Use the contentController
-                                    children: exerciseWidgets,
-                                  ),
+                                return ListView(
+                                  controller: contentController,
+                                  children: exerciseWidgets,
                                 );
                               }
                             },
