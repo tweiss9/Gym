@@ -40,7 +40,7 @@ class ExerciseWidget extends StatefulWidget {
 
 class ExerciseWidgetState extends State<ExerciseWidget> {
   String uid = FirebaseAuth.instance.currentUser!.uid;
-  late List<_Row> _rows;
+  late List<_Row> _rows = [];
   late Map exerciseMap;
   late ExerciseSet exerciseSet;
   late String name;
@@ -51,14 +51,49 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
     super.initState();
     exerciseMap = widget.exerciseEntry;
     name = exerciseMap['name'];
-    int totalSets = exerciseMap['sets']['number'];
-    _rows = List.generate(totalSets, (index) {
-      ExerciseSet set = ExerciseSet(
-        number: index + 1,
-        reps: exerciseMap['sets']['reps'],
-        weight: exerciseMap['sets']['weight'],
-      );
-      return _Row(set.number, set.reps, set.weight, false);
+    fetchExerciseDataFromFirebase();
+  }
+
+  void fetchExerciseDataFromFirebase() async {
+    DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
+    DatabaseEvent event = await databaseReference
+        .child('users')
+        .child(uid)
+        .child("Current Workout")
+        .child(name)
+        .child("sets")
+        .once();
+
+    List<_Row> fetchedRows = [];
+    dynamic data = event.snapshot.value;
+
+    if (data is List) {
+      for (int i = 0; i < data.length; i++) {
+        Map<dynamic, dynamic>? setMap = data[i] as Map<dynamic, dynamic>?;
+
+        if (setMap != null) {
+          ExerciseSet set = ExerciseSet(
+            number: setMap['number'],
+            reps: setMap['reps'],
+            weight: setMap['weight'],
+          );
+          fetchedRows.add(_Row(set.number, set.reps, set.weight, false));
+        }
+      }
+    } else if (data is Map) {
+      Map<dynamic, dynamic>? setsData = data;
+      setsData.forEach((key, value) {
+        ExerciseSet set = ExerciseSet(
+          number: int.parse(key),
+          reps: value['reps'],
+          weight: value['weight'],
+        );
+        fetchedRows.add(_Row(set.number, set.reps, set.weight, false));
+      });
+    }
+
+    setState(() {
+      _rows = fetchedRows;
     });
   }
 
