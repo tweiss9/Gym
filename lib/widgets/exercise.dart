@@ -51,14 +51,15 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
     super.initState();
     exerciseMap = widget.exerciseEntry;
     name = exerciseMap['name'];
-    exerciseSet = ExerciseSet(
-      number: exerciseMap['sets']['number'],
-      reps: exerciseMap['sets']['reps'],
-      weight: exerciseMap['sets']['weight'],
-    );
-    _rows = <_Row>[
-      _Row(exerciseSet.number, exerciseSet.reps, exerciseSet.weight, false),
-    ];
+    int totalSets = exerciseMap['sets']['number'];
+    _rows = List.generate(totalSets, (index) {
+      ExerciseSet set = ExerciseSet(
+        number: index + 1,
+        reps: exerciseMap['sets']['reps'],
+        weight: exerciseMap['sets']['weight'],
+      );
+      return _Row(set.number, set.reps, set.weight, false);
+    });
   }
 
   List<DataColumn> createDataColumns() {
@@ -206,7 +207,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
   void editWeight() {}
 
   void addSet(String exerciseName) {
-    int setNumber = exerciseSet.number + 1;
+    int setNumber = _rows.length + 1;
     DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
     databaseReference
         .child('users')
@@ -222,10 +223,8 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
     });
 
     setState(() {
-      _rows.add(_Row(
-          exerciseSet.number + 1, exerciseSet.reps, exerciseSet.weight, false));
+      _rows.add(_Row(setNumber, 1, 10, false));
     });
-    setNumber++;
   }
 
   @override
