@@ -38,6 +38,7 @@ class WorkoutPageState extends State<WorkoutPage> {
     SharedPreferences preference = await SharedPreferences.getInstance();
     setState(() {
       isWorkoutActive = preference.getBool('isWorkoutActive') ?? false;
+      currentWorkoutName = preference.getString('currentWorkoutName') ?? '';
     });
   }
 
@@ -47,20 +48,38 @@ class WorkoutPageState extends State<WorkoutPage> {
         .child('users')
         .child(uid)
         .child('Current Workout');
-    DatabaseEvent snapshot = await workoutsRef.once();
-    dynamic workoutsData = snapshot.snapshot.value;
 
-    if (workoutsData != null && workoutsData is Map) {
-      Map<Object?, Object?> resultMap = {};
-      workoutsData.forEach((key, value) {
-        if (value is Map) {
-          resultMap[key] = value;
+    DatabaseEvent snapshot = await workoutsRef.once();
+    Map<Object?, Object?>? exercises =
+        snapshot.snapshot.value as Map<Object?, Object?>?;
+
+    Map<Object?, Object?> exercisesMap = {};
+
+    if (exercises != null) {
+      exercises.forEach((exerciseName, exerciseDetails) {
+        if (exerciseDetails is Map &&
+            exerciseDetails.containsKey('name') &&
+            exerciseDetails.containsKey('sets')) {
+          dynamic setsData = exerciseDetails['sets'];
+
+          if (setsData is List && setsData.isNotEmpty) {
+            Map<Object?, Object?>? firstSet =
+                setsData[1] as Map<Object?, Object?>?;
+
+            if (firstSet != null) {
+              Map<Object?, Object?> exerciseMap = {
+                'name': exerciseDetails['name'],
+                'sets': firstSet,
+              };
+
+              exercisesMap[exerciseName] = exerciseMap;
+            }
+          }
         }
       });
-      return resultMap;
-    } else {
-      return {};
     }
+
+    return exercisesMap;
   }
 
   Future<List<String>?> getWorkoutNames() async {
@@ -121,6 +140,8 @@ class WorkoutPageState extends State<WorkoutPage> {
       oldWorkoutName = newWorkoutName;
       currentWorkoutName = newWorkoutName;
       workoutNameNotifier.value = newWorkoutName;
+      SharedPreferences preference = await SharedPreferences.getInstance();
+      preference.setString('currentWorkoutName', currentWorkoutName);
       setState(() {});
     }
     return;
@@ -137,10 +158,18 @@ class WorkoutPageState extends State<WorkoutPage> {
     if (mounted) {
       Navigator.of(context).pop();
     }
+    await FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(uid)
+        .child('Current Workout')
+        .remove();
+    currentWorkoutName = '';
     isWorkoutShowing = false;
     isWorkoutActive = false;
     SharedPreferences preference = await SharedPreferences.getInstance();
     preference.setBool('isWorkoutActive', isWorkoutActive);
+    preference.setString('currentWorkoutName', currentWorkoutName);
     setState(() {});
   }
 
@@ -176,28 +205,46 @@ class WorkoutPageState extends State<WorkoutPage> {
       exerciseName: {
         'name': exerciseName,
         'sets': {
-          'number': 1,
-          'reps': 1,
-          'weight': 10,
+          '1': {
+            'number': 1,
+            'reps': 1,
+            'weight': 10,
+          },
         },
       }
     });
     setState(() {});
   }
 
-  void finishWorkout() async {
+  void finishWorkout(String workoutName) async {
     Navigator.of(context).pop();
     currentWorkoutName = '';
     isWorkoutShowing = false;
     isWorkoutActive = false;
     SharedPreferences preference = await SharedPreferences.getInstance();
     preference.setBool('isWorkoutActive', isWorkoutActive);
-    await FirebaseDatabase.instance
+
+    DatabaseReference workoutRef = FirebaseDatabase.instance
         .ref()
         .child('users')
         .child(uid)
-        .child('Current Workout')
-        .remove();
+        .child('Current Workout');
+
+    DatabaseEvent snapshot = await workoutRef.once();
+    Map<Object?, Object?>? workoutData =
+        snapshot.snapshot.value as Map<Object?, Object?>?;
+
+    if (workoutData != null) {
+      await FirebaseDatabase.instance
+          .ref()
+          .child('users')
+          .child(uid)
+          .child('Workouts')
+          .child(workoutName)
+          .set(workoutData);
+    }
+
+    await workoutRef.remove();
   }
 
   void startWorkout(BuildContext context, String workoutName) async {
@@ -210,6 +257,7 @@ class WorkoutPageState extends State<WorkoutPage> {
     isWorkoutActive = true;
     SharedPreferences preference = await SharedPreferences.getInstance();
     preference.setBool('isWorkoutActive', isWorkoutActive);
+    preference.setString('currentWorkoutName', currentWorkoutName);
     await FirebaseDatabase.instance
         .ref()
         .child('users')
@@ -406,11 +454,11 @@ class WorkoutPageState extends State<WorkoutPage> {
             List<ExerciseWidget> exerciseWidgets = [];
             Map<Object?, Object?>? exerciseMap = snapshot.data;
             if (exerciseMap != null) {
-              for (var exerciseData in exerciseMap.entries) {
+              exerciseMap.forEach((exerciseName, exerciseDetails) {
                 exerciseWidgets.add(ExerciseWidget(
-                  exerciseEntry: exerciseData.value as Map<Object?, Object?>,
+                  exerciseEntry: exerciseDetails as Map<Object?, Object?>,
                 ));
-              }
+              });
               return ListView(
                 controller: contentController,
                 children: exerciseWidgets,
@@ -463,7 +511,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                 contentController:
                     'Are you sure you want to finish this workout?',
                 onOkPressed: ({String? textInput, String? workout}) {
-                  finishWorkout();
+                  finishWorkout(workout!);
                 },
                 workoutName: workoutName,
                 okButtonText: 'Finish Workout',

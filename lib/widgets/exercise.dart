@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import '../widgets/popup.dart';
 
@@ -37,6 +39,7 @@ class ExerciseWidget extends StatefulWidget {
 }
 
 class ExerciseWidgetState extends State<ExerciseWidget> {
+  String uid = FirebaseAuth.instance.currentUser!.uid;
   late List<_Row> _rows;
   late Map exerciseMap;
   late ExerciseSet exerciseSet;
@@ -202,12 +205,27 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
 
   void editWeight() {}
 
-  void addSet() {
-    setState(() {
-      _rows.add(
-        _Row(exerciseSet.number, exerciseSet.reps, exerciseSet.weight, false),
-      );
+  void addSet(String exerciseName) {
+    int setNumber = exerciseSet.number + 1;
+    DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
+    databaseReference
+        .child('users')
+        .child(uid)
+        .child("Current Workout")
+        .child(exerciseName)
+        .child("sets")
+        .child(setNumber.toString())
+        .set({
+      'number': setNumber,
+      'reps': 1,
+      'weight': 10,
     });
+
+    setState(() {
+      _rows.add(_Row(
+          exerciseSet.number + 1, exerciseSet.reps, exerciseSet.weight, false));
+    });
+    setNumber++;
   }
 
   @override
@@ -230,7 +248,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
             ),
             GestureDetector(
               onTap: () {
-                addSet();
+                addSet(name);
               },
               child: Container(
                 decoration: const BoxDecoration(
