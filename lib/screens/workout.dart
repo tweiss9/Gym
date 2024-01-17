@@ -21,11 +21,13 @@ class WorkoutPageState extends State<WorkoutPage> {
   bool isWorkoutActive = false;
   bool isWorkoutShowing = false;
   String currentWorkoutName = '';
+  Map<Object?, Object?>? exerciseMap;
   @override
   void initState() {
     super.initState();
     workoutNameNotifier = ValueNotifier<String>('');
     loadWorkoutState();
+    exerciseMap = {};
   }
 
   @override
@@ -201,19 +203,23 @@ class WorkoutPageState extends State<WorkoutPage> {
     if (workouts!['default'] == 'No workouts Details yet') {
       await workoutRef.child('default').remove();
     }
-    await workoutRef.update({
-      exerciseName: {
-        'name': exerciseName,
-        'sets': {
-          '1': {
-            'number': 1,
-            'reps': 1,
-            'weight': 10,
-          },
+
+    Map<Object?, Object?> newExercise = {
+      'name': exerciseName,
+      'sets': {
+        '1': {
+          'number': 1,
+          'reps': 1,
+          'weight': 10,
         },
-      }
+      },
+    };
+
+    await workoutRef.update({exerciseName: newExercise});
+
+    setState(() {
+      exerciseMap?[exerciseName] = newExercise;
     });
-    setState(() {});
   }
 
   void finishWorkout(String workoutName) async {
@@ -441,24 +447,30 @@ class WorkoutPageState extends State<WorkoutPage> {
 
   Widget buildExerciseList() {
     final contentController = ScrollController();
-    return Expanded(
+    return SizedBox(
+      height: MediaQuery.of(context).size.height *
+          0.78, 
       child: FutureBuilder<Map<Object?, Object?>>(
         future: getExercises(),
         builder: (BuildContext context,
             AsyncSnapshot<Map<Object?, Object?>> snapshot) {
-          if (snapshot.hasError) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+          } else if (snapshot.hasError) {
             return Text('Error: ${snapshot.error}');
           } else if (snapshot.data == null || snapshot.data!.isEmpty) {
             return const Text('No exercises yet');
           } else {
             List<ExerciseWidget> exerciseWidgets = [];
             Map<Object?, Object?>? exerciseMap = snapshot.data;
+
             if (exerciseMap != null) {
               exerciseMap.forEach((exerciseName, exerciseDetails) {
                 exerciseWidgets.add(ExerciseWidget(
                   exerciseEntry: exerciseDetails as Map<Object?, Object?>,
                 ));
               });
+
               return ListView(
                 controller: contentController,
                 children: exerciseWidgets,
