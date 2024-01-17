@@ -12,8 +12,8 @@ class _Row {
   );
 
   final int setValue;
-  final int repsValue;
-  final int weightValue;
+  int repsValue;
+  int weightValue;
   bool isSelected;
 }
 
@@ -131,7 +131,9 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
   }
 
   List<DataRow> createDataRows() {
-    return _rows.map((row) {
+    return _rows.asMap().entries.map((entry) {
+      int rowIndex = entry.key;
+      _Row row = entry.value;
       return DataRow(
         color: MaterialStateProperty.resolveWith<Color?>(
           (Set<MaterialState> states) {
@@ -157,7 +159,10 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                     title: 'Edit Reps',
                     contentController: 'Enter the number of reps',
                     onOkPressed: ({String? textInput, String? workout}) {
-                      editReps();
+                      editReps(
+                        textInput!,
+                        rowIndex,
+                      );
                     },
                     okButtonText: 'OK',
                     cancelButtonText: 'Cancel',
@@ -193,7 +198,10 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                     title: 'Edit Weight',
                     contentController: 'Enter the weight',
                     onOkPressed: ({String? textInput, String? workout}) {
-                      editWeight();
+                      editWeight(
+                        textInput!,
+                        rowIndex,
+                      );
                     },
                     okButtonText: 'OK',
                     cancelButtonText: 'Cancel',
@@ -237,9 +245,42 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
     }).toList();
   }
 
-  void editReps() {}
+  void editReps(
+    String newReps,
+    int rowIndex,
+  ) {
+    setState(() {
+      _rows[rowIndex].repsValue = int.parse(newReps);
+    });
+    DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
+    databaseReference
+        .child('users')
+        .child(uid)
+        .child("Current Workout")
+        .child(name)
+        .child("sets")
+        .child(_rows[rowIndex].setValue.toString())
+        .update({
+      'reps': int.parse(newReps),
+    });
+  }
 
-  void editWeight() {}
+  void editWeight(String newWeight, int rowIndex) {
+    setState(() {
+      _rows[rowIndex].weightValue = int.parse(newWeight);
+    });
+    DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
+    databaseReference
+        .child('users')
+        .child(uid)
+        .child("Current Workout")
+        .child(name)
+        .child("sets")
+        .child(_rows[rowIndex].setValue.toString())
+        .update({
+      'weight': int.parse(newWeight),
+    });
+  }
 
   void addSet(String exerciseName) {
     int setNumber = _rows.length + 1;

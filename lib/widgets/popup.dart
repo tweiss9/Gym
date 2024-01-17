@@ -51,7 +51,7 @@ class Popup {
               onPressed: () {
                 String? textInput =
                     isText || isNumber ? textController.text.trim() : null;
-                if (textController.text.trim() == "" && isText || isNumber) {
+                if (textController.text.trim() == "" && isText) {
                   ErrorHandler.showError(context, 'Input cannot be empty');
                   return;
                 }
