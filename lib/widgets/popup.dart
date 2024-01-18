@@ -23,6 +23,7 @@ class Popup {
   void show(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(title),
