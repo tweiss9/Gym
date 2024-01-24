@@ -11,7 +11,7 @@ class _Row {
     this.isSelected,
   );
 
-  final int setValue;
+  int setValue;
   int repsValue;
   int weightValue;
   bool isSelected;
@@ -303,6 +303,44 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
     });
   }
 
+  void deleteSet(String exerciseName, int index) {
+    DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
+    String deletedSetKey = _rows[index].setValue.toString();
+
+    databaseReference
+        .child('users')
+        .child(uid)
+        .child("Current Workout")
+        .child(exerciseName)
+        .child("sets")
+        .child(deletedSetKey)
+        .remove()
+        .then((_) {
+      for (int i = index + 1; i < _rows.length; i++) {
+        int newSetNumber = i;
+
+        databaseReference
+            .child('users')
+            .child(uid)
+            .child("Current Workout")
+            .child(exerciseName)
+            .child("sets")
+            .child(_rows[i].setValue.toString())
+            .update({
+          'number': newSetNumber,
+        });
+
+        setState(() {
+          _rows[i].setValue = newSetNumber;
+        });
+      }
+
+      setState(() {
+        _rows.removeAt(index);
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -314,12 +352,124 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
               name,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            DataTable(
-              headingRowHeight: 40,
-              dataRowMinHeight: 20,
-              dataRowMaxHeight: 70,
-              columns: createDataColumns(),
-              rows: createDataRows(),
+            KeyedSubtree(
+              key: UniqueKey(),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: _rows.length,
+                itemBuilder: (context, index) {
+                  _Row row = _rows[index];
+                  return Dismissible(
+                    key: Key(row.setValue.toString()),
+                    onDismissed: (direction) {
+                      deleteSet(name, index);
+                    },
+                    background: Container(
+                      color: Colors.red,
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20.0),
+                      child: const Icon(
+                        Icons.delete,
+                        color: Colors.white,
+                      ),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(8.0),
+                      margin: const EdgeInsets.symmetric(vertical: 4.0),
+                      decoration: BoxDecoration(
+                        color: row.isSelected ? Colors.green : null,
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Text(row.setValue.toString()),
+                          GestureDetector(
+                            onTap: () {
+                              Popup(
+                                true,
+                                false,
+                                title: 'Edit Reps',
+                                contentController: 'Enter the number of reps',
+                                onOkPressed: (
+                                    {String? textInput, String? workout}) {
+                                  editReps(
+                                    textInput!,
+                                    index,
+                                  );
+                                },
+                                okButtonText: 'OK',
+                                cancelButtonText: 'Cancel',
+                              ).show(context);
+                            },
+                            child: Container(
+                              alignment: Alignment.center,
+                              height: 40,
+                              width: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.grey,
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              child: Text(
+                                row.repsValue.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Popup(
+                                true,
+                                false,
+                                title: 'Edit Weight',
+                                contentController: 'Enter the weight',
+                                onOkPressed: (
+                                    {String? textInput, String? workout}) {
+                                  editWeight(
+                                    textInput!,
+                                    index,
+                                  );
+                                },
+                                okButtonText: 'OK',
+                                cancelButtonText: 'Cancel',
+                              ).show(context);
+                            },
+                            child: Container(
+                              alignment: Alignment.center,
+                              height: 40,
+                              width: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.grey,
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              child: Text(
+                                row.weightValue.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Checkbox(
+                            value: row.isSelected,
+                            onChanged: (bool? value) {
+                              if (value != null) {
+                                setState(() {
+                                  row.isSelected = value;
+                                });
+                              }
+                            },
+                            activeColor: Colors.transparent,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
             GestureDetector(
               onTap: () {
