@@ -54,6 +54,11 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
     fetchExerciseDataFromFirebase();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   void fetchExerciseDataFromFirebase() async {
     DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
     DatabaseEvent event = await databaseReference
@@ -91,10 +96,11 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
         fetchedRows.add(_Row(set.number, set.reps, set.weight, false));
       });
     }
-
-    setState(() {
-      _rows = fetchedRows;
-    });
+    if (mounted) {
+      setState(() {
+        _rows = fetchedRows;
+      });
+    }
   }
 
   List<DataColumn> createDataColumns() {
@@ -158,7 +164,10 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                     false,
                     title: 'Edit Reps',
                     contentController: 'Enter the number of reps',
-                    onOkPressed: ({String? textInput, String? workout}) {
+                    onOkPressed: (
+                        {String? textInput,
+                        String? workout,
+                        String? exercise}) {
                       editReps(
                         textInput!,
                         rowIndex,
@@ -197,7 +206,10 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                     false,
                     title: 'Edit Weight',
                     contentController: 'Enter the weight',
-                    onOkPressed: ({String? textInput, String? workout}) {
+                    onOkPressed: (
+                        {String? textInput,
+                        String? workout,
+                        String? exercise}) {
                       editWeight(
                         textInput!,
                         rowIndex,
@@ -245,13 +257,13 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
     }).toList();
   }
 
-  void editReps(
-    String newReps,
-    int rowIndex,
-  ) {
-    setState(() {
-      _rows[rowIndex].repsValue = int.parse(newReps);
-    });
+  void editReps(String newReps, int rowIndex) {
+    if (mounted) {
+      setState(() {
+        _rows[rowIndex].repsValue = int.parse(newReps);
+      });
+    }
+
     DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
     databaseReference
         .child('users')
@@ -266,9 +278,12 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
   }
 
   void editWeight(String newWeight, int rowIndex) {
-    setState(() {
-      _rows[rowIndex].weightValue = int.parse(newWeight);
-    });
+    if (mounted) {
+      setState(() {
+        _rows[rowIndex].weightValue = int.parse(newWeight);
+      });
+    }
+
     DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
     databaseReference
         .child('users')
@@ -318,7 +333,6 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
         .then((_) {
       for (int i = index + 1; i < _rows.length; i++) {
         int newSetNumber = i;
-
         databaseReference
             .child('users')
             .child(uid)
@@ -326,8 +340,18 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
             .child(exerciseName)
             .child("sets")
             .child(_rows[i].setValue.toString())
-            .update({
+            .remove();
+        databaseReference
+            .child('users')
+            .child(uid)
+            .child("Current Workout")
+            .child(exerciseName)
+            .child("sets")
+            .child(newSetNumber.toString())
+            .set({
           'number': newSetNumber,
+          'reps': _rows[i].repsValue,
+          'weight': _rows[i].weightValue,
         });
 
         setState(() {
@@ -341,6 +365,61 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
     });
   }
 
+  void deleteExercise(String exerciseName) async {
+    DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
+    databaseReference
+        .child('users')
+        .child(uid)
+        .child("Current Workout")
+        .child(exerciseName)
+        .remove();
+    if (mounted) {
+      setState(() {
+        _rows.removeWhere((row) => row.setValue == _rows.length);
+      });
+    }
+  }
+
+  void editExercise(String exerciseName, String newName) async {
+    DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
+    databaseReference
+        .child('users')
+        .child(uid)
+        .child("Current Workout")
+        .child(exerciseName)
+        .remove();
+    databaseReference
+        .child('users')
+        .child(uid)
+        .child("Current Workout")
+        .child(newName)
+        .set({
+      'name': newName,
+    });
+
+    for (int i = 0; i < _rows.length; i++) {
+      int newSetNumber = i + 1;
+      databaseReference
+          .child('users')
+          .child(uid)
+          .child("Current Workout")
+          .child(newName)
+          .child("sets")
+          .child(newSetNumber.toString())
+          .set({
+        'number': newSetNumber,
+        'reps': _rows[i].repsValue,
+        'weight': _rows[i].weightValue,
+      });
+    }
+
+    if (mounted) {
+      setState(() {
+        name = newName;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -348,9 +427,54 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
       child: Card(
         child: Column(
           children: [
-            Text(
-              name,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    Popup(
+                      false,
+                      false,
+                      title: 'Delete Exercise',
+                      contentController:
+                          'Are you sure you want to delete this exercise?',
+                      onOkPressed: (
+                          {String? textInput,
+                          String? workout,
+                          String? exercise}) {
+                        deleteExercise(name);
+                      },
+                      okButtonText: 'Delete',
+                      cancelButtonText: 'Cancel',
+                    ).show(context);
+                  },
+                ),
+                Text(
+                  name,
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () {
+                    Popup(
+                      false,
+                      true,
+                      title: 'Edit Exercise',
+                      contentController: 'Enter the exercise name',
+                      onOkPressed: (
+                          {String? textInput,
+                          String? workout,
+                          String? exercise}) {
+                        editExercise(textInput!, name);
+                      },
+                      okButtonText: 'Edit',
+                      cancelButtonText: 'Cancel',
+                    ).show(context);
+                  },
+                ),
+              ],
             ),
             KeyedSubtree(
               key: UniqueKey(),
@@ -361,6 +485,13 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                   _Row row = _rows[index];
                   return Dismissible(
                     key: Key(row.setValue.toString()),
+                    direction: DismissDirection.endToStart,
+                    confirmDismiss: (direction) {
+                      if (_rows.length <= 1) {
+                        return Future.value(false);
+                      }
+                      return Future.value(true);
+                    },
                     onDismissed: (direction) {
                       deleteSet(name, index);
                     },
@@ -393,7 +524,9 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                                 title: 'Edit Reps',
                                 contentController: 'Enter the number of reps',
                                 onOkPressed: (
-                                    {String? textInput, String? workout}) {
+                                    {String? textInput,
+                                    String? workout,
+                                    String? exercise}) {
                                   editReps(
                                     textInput!,
                                     index,
@@ -427,7 +560,9 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                                 title: 'Edit Weight',
                                 contentController: 'Enter the weight',
                                 onOkPressed: (
-                                    {String? textInput, String? workout}) {
+                                    {String? textInput,
+                                    String? workout,
+                                    exercise}) {
                                   editWeight(
                                     textInput!,
                                     index,

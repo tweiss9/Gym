@@ -394,7 +394,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                         title: 'Delete Workout',
                         contentController:
                             'Are you sure you want to delete this workout?',
-                        onOkPressed: ({String? textInput, String? workout}) {
+                        onOkPressed: ({String? textInput, String? workout, String? exercise}) {
                           deleteWorkout(workout!);
                         },
                         workoutName: workoutName,
@@ -426,7 +426,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                         true,
                         title: 'Edit Workout Name',
                         contentController: 'Enter new workout name',
-                        onOkPressed: ({String? textInput, String? workout}) {
+                        onOkPressed: ({String? textInput, String? workout, String? exercise}) {
                           editWorkoutName(
                             textInput!,
                             workout!,
@@ -448,8 +448,7 @@ class WorkoutPageState extends State<WorkoutPage> {
   Widget buildExerciseList() {
     final contentController = ScrollController();
     return SizedBox(
-      height: MediaQuery.of(context).size.height *
-          0.78, 
+      height: MediaQuery.of(context).size.height * 0.78,
       child: FutureBuilder<Map<Object?, Object?>>(
         future: getExercises(),
         builder: (BuildContext context,
@@ -500,7 +499,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                 true,
                 title: 'Create an Exercise',
                 contentController: 'Enter exercise name',
-                onOkPressed: ({String? textInput, String? workout}) {
+                onOkPressed: ({String? textInput, String? workout, String? exercise}) {
                   createExercise(workout!, textInput!);
                 },
                 workoutName: workoutName,
@@ -522,7 +521,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                 title: 'Finish Workout',
                 contentController:
                     'Are you sure you want to finish this workout?',
-                onOkPressed: ({String? textInput, String? workout}) {
+                onOkPressed: ({String? textInput, String? workout, String? exercise}) {
                   finishWorkout(workout!);
                 },
                 workoutName: workoutName,
@@ -544,7 +543,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                 title: 'Cancel Workout',
                 contentController:
                     'Are you sure you want to cancel this workout?',
-                onOkPressed: ({String? textInput, String? workout}) {
+                onOkPressed: ({String? textInput, String? workout, String? exercise}) {
                   cancelWorkout();
                 },
                 workoutName: workoutName,
@@ -581,7 +580,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                         true,
                         title: 'Create a Workout',
                         contentController: 'Enter workout name',
-                        onOkPressed: ({String? textInput, String? workout}) {
+                        onOkPressed: ({String? textInput, String? workout, String? exercise}) {
                           createWorkout(textInput!);
                         },
                         okButtonText: 'Add',

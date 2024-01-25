@@ -4,8 +4,9 @@ import '../widgets/show_error.dart';
 class Popup {
   final String title;
   final String contentController;
-  final Function({String? textInput, String? workout}) onOkPressed;
+  final Function({String? textInput, String? workout, String? exercise}) onOkPressed;
   final String? workoutName;
+  final String? exerciseName;
   final String okButtonText;
   final String cancelButtonText;
   final bool isNumber;
@@ -17,10 +18,12 @@ class Popup {
       required this.contentController,
       required this.onOkPressed,
       this.workoutName,
+      this.exerciseName,
       required this.okButtonText,
       required this.cancelButtonText});
 
   void show(BuildContext context) {
+    final TextEditingController textController = TextEditingController();
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -69,7 +72,7 @@ class Popup {
                       context, 'Input must be greater than 0');
                   return;
                 }
-                onOkPressed(textInput: textInput, workout: workoutName);
+                onOkPressed(textInput: textInput, workout: workoutName, exercise: exerciseName);
                 Navigator.of(context).pop();
                 textController.clear();
               },
