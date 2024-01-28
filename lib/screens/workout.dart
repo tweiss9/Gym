@@ -17,6 +17,8 @@ class WorkoutPage extends StatefulWidget {
 class WorkoutPageState extends State<WorkoutPage> {
   String uid = FirebaseAuth.instance.currentUser!.uid;
   int _currentIndex = 2;
+  ValueNotifier<List<ExerciseWidget>> exerciseWidgetsNotifier =
+      ValueNotifier<List<ExerciseWidget>>([]);
   ValueNotifier<String> workoutNameNotifier = ValueNotifier<String>('');
   bool isWorkoutActive = false;
   bool isWorkoutShowing = false;
@@ -27,6 +29,7 @@ class WorkoutPageState extends State<WorkoutPage> {
   void initState() {
     super.initState();
     workoutNameNotifier = ValueNotifier<String>('');
+    exerciseWidgetsNotifier = ValueNotifier<List<ExerciseWidget>>([]);
     loadWorkoutState();
     exerciseMap = {};
   }
@@ -34,6 +37,7 @@ class WorkoutPageState extends State<WorkoutPage> {
   @override
   void dispose() {
     workoutNameNotifier.dispose();
+    exerciseWidgetsNotifier.dispose();
     super.dispose();
   }
 
@@ -83,6 +87,25 @@ class WorkoutPageState extends State<WorkoutPage> {
     }
 
     return exercisesMap;
+  }
+
+  Future<void> updateExerciseWidgets() async {
+    Map<Object?, Object?> exercises = await getExercises();
+    List<ExerciseWidget> updatedWidgets = [];
+
+    exercises.forEach((exerciseName, exerciseDetails) {
+      updatedWidgets.add(
+        ExerciseWidget(
+          key: ValueKey<String>(exerciseName as String),
+          uniqueId: exerciseName,
+          exerciseEntry: exerciseDetails as Map<Object?, Object?>,
+          onDelete: () => deleteExercise(exerciseName),
+        ),
+      );
+    });
+
+    exerciseWidgetsNotifier.value = updatedWidgets;
+    exerciseWidgets = updatedWidgets;
   }
 
   Future<List<String>?> getWorkoutNames() async {
@@ -287,6 +310,8 @@ class WorkoutPageState extends State<WorkoutPage> {
         .child(uid)
         .child('Current Workout')
         .update(workoutData);
+
+    await updateExerciseWidgets();
     if (mounted) {
       showModalBottomSheet(
         context: context,
@@ -312,33 +337,35 @@ class WorkoutPageState extends State<WorkoutPage> {
     }
   }
 
-  void continueWorkout(BuildContext context, String workoutName) {
+  Future<void> continueWorkout(BuildContext context, String workoutName) async {
     isWorkoutShowing = true;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.95,
-          builder:
-              (BuildContext innerContext, ScrollController scrollController) {
-            return SingleChildScrollView(
-              child: buildBottomSheet(workoutName),
-            );
-          },
-        );
-      },
-    ).whenComplete(() {
-      setState(() {
-        isWorkoutShowing = false;
-        currentWorkoutName = workoutName;
+    await updateExerciseWidgets();
+    if (mounted) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (BuildContext context) {
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.95,
+            builder:
+                (BuildContext innerContext, ScrollController scrollController) {
+              return SingleChildScrollView(
+                child: buildBottomSheet(workoutName),
+              );
+            },
+          );
+        },
+      ).whenComplete(() {
+        setState(() {
+          isWorkoutShowing = false;
+          currentWorkoutName = workoutName;
+        });
       });
-    });
+    }
   }
 
   Widget buildBottomSheet(String workoutName) {
-      print('Building bottom sheet');
     return Container(
       width: double.infinity,
       height: MediaQuery.of(context).size.height * 0.95,
@@ -453,62 +480,40 @@ class WorkoutPageState extends State<WorkoutPage> {
         });
   }
 
-void deleteExercise(String exerciseName) async {
-  DatabaseReference workoutRef = FirebaseDatabase.instance
-      .ref()
-      .child('users')
-      .child(uid)
-      .child('Current Workout')
-      .child(exerciseName);
+  void deleteExercise(String exerciseName) async {
+    DatabaseReference workoutRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(uid)
+        .child('Current Workout')
+        .child(exerciseName);
 
-  await workoutRef.remove();
+    await workoutRef.remove();
 
-  setState(() {
-    print("Before removal: $exerciseWidgets");
+    setState(() {
+      print("Before removal: $exerciseWidgets");
 
-    // Filter out the ExerciseWidget with the matching uniqueId
-    exerciseWidgets = exerciseWidgets
-        .where((exerciseWidget) => exerciseWidget.uniqueId != exerciseName)
-        .toList();
+      // Filter out the ExerciseWidget with the matching uniqueId
+      exerciseWidgets = exerciseWidgets
+          .where((exerciseWidget) => exerciseWidget.uniqueId != exerciseName)
+          .toList();
 
-    print("After removal: $exerciseWidgets");
-  });
-  setState(() {
-    
-  });
-}
+      print("After removal: $exerciseWidgets");
+    });
+    setState(() {});
+  }
 
   Widget buildExerciseList() {
     final contentController = ScrollController();
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.78,
-      child: FutureBuilder<Map<Object?, Object?>>(
-        future: getExercises(),
-        builder: (BuildContext context,
-            AsyncSnapshot<Map<Object?, Object?>> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
-          } else if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
-          } else if (snapshot.data == null || snapshot.data!.isEmpty) {
-            return const Text('No exercises yet');
-          } else {
-            exerciseWidgets = snapshot.data!.entries.map((entry) {
-              return ExerciseWidget(
-                key: UniqueKey(),
-                exerciseEntry: entry.value as Map<Object?, Object?>,
-                  uniqueId: entry.key.toString(),
-                onDelete: () {
-                  deleteExercise(entry.key.toString());
-                },
-              );
-            }).toList();
-
-            return ListView(
-              controller: contentController,
-              children: exerciseWidgets,
-            );
-          }
+      child: ValueListenableBuilder<List<ExerciseWidget>>(
+        valueListenable: exerciseWidgetsNotifier,
+        builder: (context, value, child) {
+          return ListView(
+            controller: contentController,
+            children: value,
+          );
         },
       ),
     );
