@@ -338,6 +338,7 @@ class WorkoutPageState extends State<WorkoutPage> {
   }
 
   Widget buildBottomSheet(String workoutName) {
+      print('Building bottom sheet');
     return Container(
       width: double.infinity,
       height: MediaQuery.of(context).size.height * 0.95,
@@ -452,21 +453,30 @@ class WorkoutPageState extends State<WorkoutPage> {
         });
   }
 
-  void deleteExercise(String exerciseName) {
-    DatabaseReference workoutRef = FirebaseDatabase.instance
-        .ref()
-        .child('users')
-        .child(uid)
-        .child('Current Workout')
-        .child(exerciseName);
+void deleteExercise(String exerciseName) async {
+  DatabaseReference workoutRef = FirebaseDatabase.instance
+      .ref()
+      .child('users')
+      .child(uid)
+      .child('Current Workout')
+      .child(exerciseName);
 
-    workoutRef.remove().then((_) {
-      setState(() {
-        exerciseWidgets.removeWhere(
-            (exerciseWidget) => exerciseWidget.key.toString() == exerciseName);
-      });
-    });
-  }
+  await workoutRef.remove();
+
+  setState(() {
+    print("Before removal: $exerciseWidgets");
+
+    // Filter out the ExerciseWidget with the matching uniqueId
+    exerciseWidgets = exerciseWidgets
+        .where((exerciseWidget) => exerciseWidget.uniqueId != exerciseName)
+        .toList();
+
+    print("After removal: $exerciseWidgets");
+  });
+  setState(() {
+    
+  });
+}
 
   Widget buildExerciseList() {
     final contentController = ScrollController();
@@ -487,6 +497,7 @@ class WorkoutPageState extends State<WorkoutPage> {
               return ExerciseWidget(
                 key: UniqueKey(),
                 exerciseEntry: entry.value as Map<Object?, Object?>,
+                  uniqueId: entry.key.toString(),
                 onDelete: () {
                   deleteExercise(entry.key.toString());
                 },

@@ -31,11 +31,14 @@ class ExerciseSet {
 
 class ExerciseWidget extends StatefulWidget {
   final Map<Object?, Object?> exerciseEntry;
-
+  final String uniqueId;
   final VoidCallback onDelete;
 
   const ExerciseWidget(
-      {super.key, required this.exerciseEntry, required this.onDelete});
+      {super.key,
+      required this.uniqueId,
+      required this.exerciseEntry,
+      required this.onDelete});
 
   @override
   ExerciseWidgetState createState() => ExerciseWidgetState();
