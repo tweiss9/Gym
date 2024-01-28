@@ -491,15 +491,12 @@ class WorkoutPageState extends State<WorkoutPage> {
     await workoutRef.remove();
 
     setState(() {
-      print("Before removal: $exerciseWidgets");
-
-      // Filter out the ExerciseWidget with the matching uniqueId
       exerciseWidgets = exerciseWidgets
           .where((exerciseWidget) => exerciseWidget.uniqueId != exerciseName)
           .toList();
-
-      print("After removal: $exerciseWidgets");
     });
+
+    exerciseWidgetsNotifier.value = List.from(exerciseWidgets);
     setState(() {});
   }
 
