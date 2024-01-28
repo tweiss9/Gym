@@ -32,7 +32,10 @@ class ExerciseSet {
 class ExerciseWidget extends StatefulWidget {
   final Map<Object?, Object?> exerciseEntry;
 
-  const ExerciseWidget({super.key, required this.exerciseEntry});
+  final VoidCallback onDelete;
+
+  const ExerciseWidget(
+      {super.key, required this.exerciseEntry, required this.onDelete});
 
   @override
   ExerciseWidgetState createState() => ExerciseWidgetState();
@@ -365,21 +368,6 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
     });
   }
 
-  void deleteExercise(String exerciseName) async {
-    DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
-    databaseReference
-        .child('users')
-        .child(uid)
-        .child("Current Workout")
-        .child(exerciseName)
-        .remove();
-    if (mounted) {
-      setState(() {
-        _rows.removeWhere((row) => row.setValue == _rows.length);
-      });
-    }
-  }
-
   void editExercise(String exerciseName, String newName) async {
     DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
     databaseReference
@@ -431,25 +419,8 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    Popup(
-                      false,
-                      false,
-                      title: 'Delete Exercise',
-                      contentController:
-                          'Are you sure you want to delete this exercise?',
-                      onOkPressed: (
-                          {String? textInput,
-                          String? workout,
-                          String? exercise}) {
-                        deleteExercise(name);
-                      },
-                      okButtonText: 'Delete',
-                      cancelButtonText: 'Cancel',
-                    ).show(context);
-                  },
-                ),
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: widget.onDelete),
                 Text(
                   name,
                   style: const TextStyle(

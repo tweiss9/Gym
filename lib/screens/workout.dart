@@ -22,6 +22,7 @@ class WorkoutPageState extends State<WorkoutPage> {
   bool isWorkoutShowing = false;
   String currentWorkoutName = '';
   Map<Object?, Object?>? exerciseMap;
+  List<ExerciseWidget> exerciseWidgets = [];
   @override
   void initState() {
     super.initState();
@@ -394,7 +395,10 @@ class WorkoutPageState extends State<WorkoutPage> {
                         title: 'Delete Workout',
                         contentController:
                             'Are you sure you want to delete this workout?',
-                        onOkPressed: ({String? textInput, String? workout, String? exercise}) {
+                        onOkPressed: (
+                            {String? textInput,
+                            String? workout,
+                            String? exercise}) {
                           deleteWorkout(workout!);
                         },
                         workoutName: workoutName,
@@ -426,7 +430,10 @@ class WorkoutPageState extends State<WorkoutPage> {
                         true,
                         title: 'Edit Workout Name',
                         contentController: 'Enter new workout name',
-                        onOkPressed: ({String? textInput, String? workout, String? exercise}) {
+                        onOkPressed: (
+                            {String? textInput,
+                            String? workout,
+                            String? exercise}) {
                           editWorkoutName(
                             textInput!,
                             workout!,
@@ -445,6 +452,22 @@ class WorkoutPageState extends State<WorkoutPage> {
         });
   }
 
+  void deleteExercise(String exerciseName) {
+    DatabaseReference workoutRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(uid)
+        .child('Current Workout')
+        .child(exerciseName);
+
+    workoutRef.remove().then((_) {
+      setState(() {
+        exerciseWidgets.removeWhere(
+            (exerciseWidget) => exerciseWidget.key.toString() == exerciseName);
+      });
+    });
+  }
+
   Widget buildExerciseList() {
     final contentController = ScrollController();
     return SizedBox(
@@ -460,23 +483,20 @@ class WorkoutPageState extends State<WorkoutPage> {
           } else if (snapshot.data == null || snapshot.data!.isEmpty) {
             return const Text('No exercises yet');
           } else {
-            List<ExerciseWidget> exerciseWidgets = [];
-            Map<Object?, Object?>? exerciseMap = snapshot.data;
-
-            if (exerciseMap != null) {
-              exerciseMap.forEach((exerciseName, exerciseDetails) {
-                exerciseWidgets.add(ExerciseWidget(
-                  exerciseEntry: exerciseDetails as Map<Object?, Object?>,
-                ));
-              });
-
-              return ListView(
-                controller: contentController,
-                children: exerciseWidgets,
+            exerciseWidgets = snapshot.data!.entries.map((entry) {
+              return ExerciseWidget(
+                key: UniqueKey(),
+                exerciseEntry: entry.value as Map<Object?, Object?>,
+                onDelete: () {
+                  deleteExercise(entry.key.toString());
+                },
               );
-            } else {
-              return const Text('No exercises yet');
-            }
+            }).toList();
+
+            return ListView(
+              controller: contentController,
+              children: exerciseWidgets,
+            );
           }
         },
       ),
@@ -499,7 +519,8 @@ class WorkoutPageState extends State<WorkoutPage> {
                 true,
                 title: 'Create an Exercise',
                 contentController: 'Enter exercise name',
-                onOkPressed: ({String? textInput, String? workout, String? exercise}) {
+                onOkPressed: (
+                    {String? textInput, String? workout, String? exercise}) {
                   createExercise(workout!, textInput!);
                 },
                 workoutName: workoutName,
@@ -521,7 +542,8 @@ class WorkoutPageState extends State<WorkoutPage> {
                 title: 'Finish Workout',
                 contentController:
                     'Are you sure you want to finish this workout?',
-                onOkPressed: ({String? textInput, String? workout, String? exercise}) {
+                onOkPressed: (
+                    {String? textInput, String? workout, String? exercise}) {
                   finishWorkout(workout!);
                 },
                 workoutName: workoutName,
@@ -543,7 +565,8 @@ class WorkoutPageState extends State<WorkoutPage> {
                 title: 'Cancel Workout',
                 contentController:
                     'Are you sure you want to cancel this workout?',
-                onOkPressed: ({String? textInput, String? workout, String? exercise}) {
+                onOkPressed: (
+                    {String? textInput, String? workout, String? exercise}) {
                   cancelWorkout();
                 },
                 workoutName: workoutName,
@@ -580,7 +603,10 @@ class WorkoutPageState extends State<WorkoutPage> {
                         true,
                         title: 'Create a Workout',
                         contentController: 'Enter workout name',
-                        onOkPressed: ({String? textInput, String? workout, String? exercise}) {
+                        onOkPressed: (
+                            {String? textInput,
+                            String? workout,
+                            String? exercise}) {
                           createWorkout(textInput!);
                         },
                         okButtonText: 'Add',
