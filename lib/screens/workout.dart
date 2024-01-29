@@ -23,7 +23,7 @@ class WorkoutPageState extends State<WorkoutPage> {
   bool isWorkoutActive = false;
   bool isWorkoutShowing = false;
   String currentWorkoutName = '';
-  Map<Object?, Object?>? exerciseMap;
+  Map<Object?, Object?>? exerciseMap = {};
   List<ExerciseWidget> exerciseWidgets = [];
 
   @override
@@ -32,7 +32,6 @@ class WorkoutPageState extends State<WorkoutPage> {
     workoutNameNotifier = ValueNotifier<String>('');
     exerciseWidgetsNotifier = ValueNotifier<List<ExerciseWidget>>([]);
     loadWorkoutState();
-    exerciseMap = {};
   }
 
   @override
@@ -155,6 +154,16 @@ class WorkoutPageState extends State<WorkoutPage> {
       }
       return;
     } else {
+      await FirebaseDatabase.instance
+          .ref()
+          .child('users')
+          .child(uid)
+          .child('Current Workout')
+          .update({'Workout Name': newWorkoutName});
+
+      workoutNameNotifier.value = newWorkoutName;
+      currentWorkoutName = newWorkoutName;
+
       final ref = FirebaseDatabase.instance
           .ref()
           .child('users')
@@ -165,10 +174,9 @@ class WorkoutPageState extends State<WorkoutPage> {
       await ref.child(newWorkoutName).set(value);
       await ref.child(oldWorkoutName).remove();
       oldWorkoutName = newWorkoutName;
-      currentWorkoutName = newWorkoutName;
-      workoutNameNotifier.value = newWorkoutName;
       SharedPreferences preference = await SharedPreferences.getInstance();
-      preference.setString('currentWorkoutName', currentWorkoutName);
+      preference.setString('currentWorkoutName', newWorkoutName);
+
       setState(() {});
     }
     return;
@@ -256,35 +264,23 @@ class WorkoutPageState extends State<WorkoutPage> {
     exerciseWidgetsNotifier.value = List.from(exerciseWidgets);
   }
 
-  void finishWorkout(String workoutName) async {
-    Navigator.of(context).pop();
-    currentWorkoutName = '';
-    isWorkoutShowing = false;
-    isWorkoutActive = false;
-    SharedPreferences preference = await SharedPreferences.getInstance();
-    preference.setBool('isWorkoutActive', isWorkoutActive);
-
+  void deleteExercise(String exerciseName) async {
     DatabaseReference workoutRef = FirebaseDatabase.instance
         .ref()
         .child('users')
         .child(uid)
-        .child('Current Workout');
-
-    DatabaseEvent snapshot = await workoutRef.once();
-    Map<Object?, Object?>? workoutData =
-        snapshot.snapshot.value as Map<Object?, Object?>?;
-
-    if (workoutData != null) {
-      await FirebaseDatabase.instance
-          .ref()
-          .child('users')
-          .child(uid)
-          .child('Workouts')
-          .child(workoutName)
-          .set(workoutData);
-    }
+        .child('Current Workout')
+        .child(exerciseName);
 
     await workoutRef.remove();
+
+    setState(() {
+      exerciseWidgets = exerciseWidgets
+          .where((exerciseWidget) => exerciseWidget.uniqueId != exerciseName)
+          .toList();
+    });
+
+    exerciseWidgetsNotifier.value = List.from(exerciseWidgets);
   }
 
   void startWorkout(BuildContext context, String workoutName) async {
@@ -375,6 +371,37 @@ class WorkoutPageState extends State<WorkoutPage> {
     }
   }
 
+  void finishWorkout(String workoutName) async {
+    Navigator.of(context).pop();
+    currentWorkoutName = '';
+    isWorkoutShowing = false;
+    isWorkoutActive = false;
+    SharedPreferences preference = await SharedPreferences.getInstance();
+    preference.setBool('isWorkoutActive', isWorkoutActive);
+
+    DatabaseReference workoutRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(uid)
+        .child('Current Workout');
+
+    DatabaseEvent snapshot = await workoutRef.once();
+    Map<Object?, Object?>? workoutData =
+        snapshot.snapshot.value as Map<Object?, Object?>?;
+
+    if (workoutData != null) {
+      await FirebaseDatabase.instance
+          .ref()
+          .child('users')
+          .child(uid)
+          .child('Workouts')
+          .child(workoutName)
+          .set(workoutData);
+    }
+
+    await workoutRef.remove();
+  }
+
   Widget buildBottomSheet(String workoutName) {
     return Container(
       width: double.infinity,
@@ -406,104 +433,77 @@ class WorkoutPageState extends State<WorkoutPage> {
   }
 
   Widget buildHeaderRow(String workoutName) {
-    return ValueListenableBuilder<String>(
-        valueListenable: workoutNameNotifier,
-        builder: (context, value, child) {
-          return Column(
-            children: [
-              const SizedBox(
-                width: 300,
-                child: Divider(
-                  color: Colors.grey,
-                  thickness: 4.0,
-                ),
+    return Column(
+      children: [
+        const SizedBox(
+          width: 300,
+          child: Divider(
+            color: Colors.grey,
+            thickness: 4.0,
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              icon: const Icon(
+                Icons.delete,
+                color: Color.fromARGB(255, 245, 98, 88),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.delete,
-                      color: Color.fromARGB(255, 245, 98, 88),
-                    ),
-                    onPressed: () {
-                      Popup(
-                        false,
-                        false,
-                        title: 'Delete Workout',
-                        contentController:
-                            'Are you sure you want to delete this workout?',
-                        onOkPressed: ({
-                          String? textInput,
-                        }) {
-                          deleteWorkout(workoutName);
-                        },
-                        okButtonText: 'Delete',
-                        cancelButtonText: 'Cancel',
-                      ).show(context);
-                    },
-                  ),
-                  const Spacer(),
-                  ValueListenableBuilder<String>(
-                    valueListenable: workoutNameNotifier,
-                    builder: (context, value, child) {
-                      return Text(
-                        workoutName,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      );
-                    },
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () {
-                      Popup(
-                        false,
-                        true,
-                        title: 'Edit Workout Name',
-                        contentController: 'Enter new workout name',
-                        onOkPressed: ({
-                          String? textInput,
-                        }) {
-                          editWorkoutName(
-                            textInput!,
-                            workoutName,
-                          );
-                        },
-                        okButtonText: 'Edit',
-                        cancelButtonText: 'Cancel',
-                      ).show(context);
-                    },
-                  ),
-                ],
+              onPressed: () {
+                Popup(
+                  false,
+                  false,
+                  title: 'Delete Workout',
+                  contentController:
+                      'Are you sure you want to delete this workout?',
+                  onOkPressed: ({
+                    String? textInput,
+                  }) {
+                    deleteWorkout(workoutName);
+                  },
+                  okButtonText: 'Delete',
+                  cancelButtonText: 'Cancel',
+                ).show(context);
+              },
+            ),
+            const Spacer(),
+            Text(
+              workoutNameNotifier.value.isNotEmpty
+                  ? workoutNameNotifier.value
+                  : workoutName,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          );
-        });
-  }
-
-  void deleteExercise(String exerciseName) async {
-    DatabaseReference workoutRef = FirebaseDatabase.instance
-        .ref()
-        .child('users')
-        .child(uid)
-        .child('Current Workout')
-        .child(exerciseName);
-
-    await workoutRef.remove();
-
-    setState(() {
-      exerciseWidgets = exerciseWidgets
-          .where((exerciseWidget) => exerciseWidget.uniqueId != exerciseName)
-          .toList();
-    });
-
-    exerciseWidgetsNotifier.value = List.from(exerciseWidgets);
-    setState(() {});
+            ),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                Popup(
+                  false,
+                  true,
+                  title: 'Edit Workout Name',
+                  contentController: 'Enter new workout name',
+                  onOkPressed: ({
+                    String? textInput,
+                  }) {
+                    editWorkoutName(
+                      textInput!,
+                      workoutName,
+                    );
+                  },
+                  okButtonText: 'Edit',
+                  cancelButtonText: 'Cancel',
+                ).show(context);
+              },
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   Widget buildExerciseList() {
