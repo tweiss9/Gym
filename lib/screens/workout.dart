@@ -25,6 +25,7 @@ class WorkoutPageState extends State<WorkoutPage> {
   String currentWorkoutName = '';
   Map<Object?, Object?>? exerciseMap;
   List<ExerciseWidget> exerciseWidgets = [];
+
   @override
   void initState() {
     super.initState();
@@ -241,9 +242,18 @@ class WorkoutPageState extends State<WorkoutPage> {
 
     await workoutRef.update({exerciseName: newExercise});
 
-    setState(() {
-      exerciseMap?[exerciseName] = newExercise;
-    });
+    ExerciseWidget newExerciseWidget = ExerciseWidget(
+      key: UniqueKey(),
+      exerciseEntry: newExercise,
+      uniqueId: exerciseName,
+      onDelete: () {
+        deleteExercise(exerciseName);
+      },
+    );
+
+    exerciseWidgets.add(newExerciseWidget);
+
+    exerciseWidgetsNotifier.value = List.from(exerciseWidgets);
   }
 
   void finishWorkout(String workoutName) async {
@@ -423,13 +433,11 @@ class WorkoutPageState extends State<WorkoutPage> {
                         title: 'Delete Workout',
                         contentController:
                             'Are you sure you want to delete this workout?',
-                        onOkPressed: (
-                            {String? textInput,
-                            String? workout,
-                            String? exercise}) {
-                          deleteWorkout(workout!);
+                        onOkPressed: ({
+                          String? textInput,
+                        }) {
+                          deleteWorkout(workoutName);
                         },
-                        workoutName: workoutName,
                         okButtonText: 'Delete',
                         cancelButtonText: 'Cancel',
                       ).show(context);
@@ -458,16 +466,14 @@ class WorkoutPageState extends State<WorkoutPage> {
                         true,
                         title: 'Edit Workout Name',
                         contentController: 'Enter new workout name',
-                        onOkPressed: (
-                            {String? textInput,
-                            String? workout,
-                            String? exercise}) {
+                        onOkPressed: ({
+                          String? textInput,
+                        }) {
                           editWorkoutName(
                             textInput!,
-                            workout!,
+                            workoutName,
                           );
                         },
-                        workoutName: workoutName,
                         okButtonText: 'Edit',
                         cancelButtonText: 'Cancel',
                       ).show(context);
@@ -532,11 +538,9 @@ class WorkoutPageState extends State<WorkoutPage> {
                 true,
                 title: 'Create an Exercise',
                 contentController: 'Enter exercise name',
-                onOkPressed: (
-                    {String? textInput, String? workout, String? exercise}) {
-                  createExercise(workout!, textInput!);
+                onOkPressed: ({String? textInput}) {
+                  createExercise(workoutName, textInput!);
                 },
-                workoutName: workoutName,
                 okButtonText: 'Create',
                 cancelButtonText: 'Cancel',
               ).show(context);
@@ -555,11 +559,9 @@ class WorkoutPageState extends State<WorkoutPage> {
                 title: 'Finish Workout',
                 contentController:
                     'Are you sure you want to finish this workout?',
-                onOkPressed: (
-                    {String? textInput, String? workout, String? exercise}) {
-                  finishWorkout(workout!);
+                onOkPressed: ({String? textInput}) {
+                  finishWorkout(workoutName);
                 },
-                workoutName: workoutName,
                 okButtonText: 'Finish Workout',
                 cancelButtonText: 'Stay on Workout',
               ).show(context);
@@ -578,11 +580,9 @@ class WorkoutPageState extends State<WorkoutPage> {
                 title: 'Cancel Workout',
                 contentController:
                     'Are you sure you want to cancel this workout?',
-                onOkPressed: (
-                    {String? textInput, String? workout, String? exercise}) {
+                onOkPressed: ({String? textInput}) {
                   cancelWorkout();
                 },
-                workoutName: workoutName,
                 okButtonText: 'Cancel Workout',
                 cancelButtonText: 'Stay on Workout',
               ).show(context);

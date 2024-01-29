@@ -170,10 +170,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                     false,
                     title: 'Edit Reps',
                     contentController: 'Enter the number of reps',
-                    onOkPressed: (
-                        {String? textInput,
-                        String? workout,
-                        String? exercise}) {
+                    onOkPressed: ({String? textInput}) {
                       editReps(
                         textInput!,
                         rowIndex,
@@ -212,10 +209,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                     false,
                     title: 'Edit Weight',
                     contentController: 'Enter the weight',
-                    onOkPressed: (
-                        {String? textInput,
-                        String? workout,
-                        String? exercise}) {
+                    onOkPressed: ({String? textInput}) {
                       editWeight(
                         textInput!,
                         rowIndex,
@@ -437,10 +431,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                       true,
                       title: 'Edit Exercise',
                       contentController: 'Enter the exercise name',
-                      onOkPressed: (
-                          {String? textInput,
-                          String? workout,
-                          String? exercise}) {
+                      onOkPressed: ({String? textInput}) {
                         editExercise(textInput!, name);
                       },
                       okButtonText: 'Edit',
@@ -497,10 +488,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                                 false,
                                 title: 'Edit Reps',
                                 contentController: 'Enter the number of reps',
-                                onOkPressed: (
-                                    {String? textInput,
-                                    String? workout,
-                                    String? exercise}) {
+                                onOkPressed: ({String? textInput}) {
                                   editReps(
                                     textInput!,
                                     index,
@@ -533,10 +521,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                                 false,
                                 title: 'Edit Weight',
                                 contentController: 'Enter the weight',
-                                onOkPressed: (
-                                    {String? textInput,
-                                    String? workout,
-                                    exercise}) {
+                                onOkPressed: ({String? textInput}) {
                                   editWeight(
                                     textInput!,
                                     index,
