@@ -365,7 +365,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
     });
   }
 
-  void editExercise(String exerciseName, String newName) async {
+  void editExerciseName(String exerciseName, String newName) async {
     DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
     databaseReference
         .child('users')
@@ -432,7 +432,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                       title: 'Edit Exercise',
                       contentController: 'Enter the exercise name',
                       onOkPressed: ({String? textInput}) {
-                        editExercise(textInput!, name);
+                        editExerciseName(name, textInput!);
                       },
                       okButtonText: 'Edit',
                       cancelButtonText: 'Cancel',

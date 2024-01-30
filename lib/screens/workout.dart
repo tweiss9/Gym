@@ -29,9 +29,10 @@ class WorkoutPageState extends State<WorkoutPage> {
   @override
   void initState() {
     super.initState();
-    workoutNameNotifier = ValueNotifier<String>('');
-    exerciseWidgetsNotifier = ValueNotifier<List<ExerciseWidget>>([]);
     loadWorkoutState();
+    workoutNameNotifier = currentWorkoutName.isNotEmpty
+        ? ValueNotifier<String>(currentWorkoutName)
+        : ValueNotifier<String>('');
   }
 
   @override
@@ -144,11 +145,11 @@ class WorkoutPageState extends State<WorkoutPage> {
   }
 
   void editWorkoutName(
-    String newWorkoutName,
-    String oldWorkoutName,
+    String newName,
+    String oldName,
   ) async {
     List<String>? workouts = await getWorkoutNames();
-    if (workouts!.contains(newWorkoutName)) {
+    if (workouts!.contains(newName)) {
       if (mounted) {
         ErrorHandler.showError(context, 'Workout already exists');
       }
@@ -159,25 +160,31 @@ class WorkoutPageState extends State<WorkoutPage> {
           .child('users')
           .child(uid)
           .child('Current Workout')
-          .update({'Workout Name': newWorkoutName});
+          .update({'Workout Name': newName});
 
-      workoutNameNotifier.value = newWorkoutName;
-      currentWorkoutName = newWorkoutName;
+      setState(() {
+        currentWorkoutName = newName;
+        workoutNameNotifier.value = newName;
+      });
 
       final ref = FirebaseDatabase.instance
           .ref()
           .child('users')
           .child(uid)
           .child('Workouts');
-      final event = await ref.child(oldWorkoutName).once();
+      final event = await ref.child(oldName).once();
       final value = event.snapshot.value;
-      await ref.child(newWorkoutName).set(value);
-      await ref.child(oldWorkoutName).remove();
-      oldWorkoutName = newWorkoutName;
+      await ref.child(newName).set(value);
+      await ref.child(oldName).remove();
+      await FirebaseDatabase.instance
+          .ref()
+          .child('users')
+          .child(uid)
+          .child('Workouts')
+          .child(newName)
+          .update({'Workout Name': newName});
       SharedPreferences preference = await SharedPreferences.getInstance();
-      preference.setString('currentWorkoutName', newWorkoutName);
-
-      setState(() {});
+      preference.setString('currentWorkoutName', newName);
     }
     return;
   }
@@ -200,6 +207,7 @@ class WorkoutPageState extends State<WorkoutPage> {
         .child('Current Workout')
         .remove();
     currentWorkoutName = '';
+    workoutNameNotifier = ValueNotifier<String>('');
     isWorkoutShowing = false;
     isWorkoutActive = false;
     SharedPreferences preference = await SharedPreferences.getInstance();
@@ -211,6 +219,7 @@ class WorkoutPageState extends State<WorkoutPage> {
   void cancelWorkout() async {
     Navigator.of(context).pop();
     currentWorkoutName = '';
+    workoutNameNotifier = ValueNotifier<String>('');
     isWorkoutShowing = false;
     isWorkoutActive = false;
     SharedPreferences preference = await SharedPreferences.getInstance();
@@ -289,6 +298,7 @@ class WorkoutPageState extends State<WorkoutPage> {
       return;
     }
     currentWorkoutName = workoutName;
+    workoutNameNotifier.value = workoutName;
     isWorkoutShowing = true;
     isWorkoutActive = true;
     SharedPreferences preference = await SharedPreferences.getInstance();
@@ -329,7 +339,7 @@ class WorkoutPageState extends State<WorkoutPage> {
             builder:
                 (BuildContext innerContext, ScrollController scrollController) {
               return SingleChildScrollView(
-                child: buildBottomSheet(workoutName),
+                child: buildBottomSheet(),
               );
             },
           );
@@ -357,7 +367,7 @@ class WorkoutPageState extends State<WorkoutPage> {
             builder:
                 (BuildContext innerContext, ScrollController scrollController) {
               return SingleChildScrollView(
-                child: buildBottomSheet(workoutName),
+                child: buildBottomSheet(),
               );
             },
           );
@@ -374,6 +384,7 @@ class WorkoutPageState extends State<WorkoutPage> {
   void finishWorkout(String workoutName) async {
     Navigator.of(context).pop();
     currentWorkoutName = '';
+    workoutNameNotifier = ValueNotifier<String>('');
     isWorkoutShowing = false;
     isWorkoutActive = false;
     SharedPreferences preference = await SharedPreferences.getInstance();
@@ -402,7 +413,7 @@ class WorkoutPageState extends State<WorkoutPage> {
     await workoutRef.remove();
   }
 
-  Widget buildBottomSheet(String workoutName) {
+  Widget buildBottomSheet() {
     return Container(
       width: double.infinity,
       height: MediaQuery.of(context).size.height * 0.95,
@@ -424,15 +435,15 @@ class WorkoutPageState extends State<WorkoutPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          buildHeaderRow(workoutName),
+          buildHeaderRow(),
           buildExerciseList(),
-          buildActionButtons(workoutName),
+          buildActionButtons(),
         ],
       ),
     );
   }
 
-  Widget buildHeaderRow(String workoutName) {
+  Widget buildHeaderRow() {
     return Column(
       children: [
         const SizedBox(
@@ -460,7 +471,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                   onOkPressed: ({
                     String? textInput,
                   }) {
-                    deleteWorkout(workoutName);
+                    deleteWorkout(currentWorkoutName);
                   },
                   okButtonText: 'Delete',
                   cancelButtonText: 'Cancel',
@@ -471,7 +482,7 @@ class WorkoutPageState extends State<WorkoutPage> {
             Text(
               workoutNameNotifier.value.isNotEmpty
                   ? workoutNameNotifier.value
-                  : workoutName,
+                  : currentWorkoutName,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 24,
@@ -492,7 +503,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                   }) {
                     editWorkoutName(
                       textInput!,
-                      workoutName,
+                      currentWorkoutName,
                     );
                   },
                   okButtonText: 'Edit',
@@ -522,7 +533,7 @@ class WorkoutPageState extends State<WorkoutPage> {
     );
   }
 
-  Widget buildActionButtons(String workoutName) {
+  Widget buildActionButtons() {
     return Container(
       padding: const EdgeInsets.all(8.0),
       color: Colors.white,
@@ -539,7 +550,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                 title: 'Create an Exercise',
                 contentController: 'Enter exercise name',
                 onOkPressed: ({String? textInput}) {
-                  createExercise(workoutName, textInput!);
+                  createExercise(currentWorkoutName, textInput!);
                 },
                 okButtonText: 'Create',
                 cancelButtonText: 'Cancel',
@@ -560,7 +571,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                 contentController:
                     'Are you sure you want to finish this workout?',
                 onOkPressed: ({String? textInput}) {
-                  finishWorkout(workoutName);
+                  finishWorkout(currentWorkoutName);
                 },
                 okButtonText: 'Finish Workout',
                 cancelButtonText: 'Stay on Workout',
