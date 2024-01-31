@@ -20,6 +20,8 @@ class WorkoutPageState extends State<WorkoutPage> {
   ValueNotifier<List<ExerciseWidget>> exerciseWidgetsNotifier =
       ValueNotifier<List<ExerciseWidget>>([]);
   ValueNotifier<String> workoutNameNotifier = ValueNotifier<String>('');
+  ValueNotifier<List<String>> workoutListNotifier =
+      ValueNotifier<List<String>>([]);
   bool isWorkoutActive = false;
   bool isWorkoutShowing = false;
   String currentWorkoutName = '';
@@ -30,9 +32,6 @@ class WorkoutPageState extends State<WorkoutPage> {
   void initState() {
     super.initState();
     loadWorkoutState();
-    workoutNameNotifier = currentWorkoutName.isNotEmpty
-        ? ValueNotifier<String>(currentWorkoutName)
-        : ValueNotifier<String>('');
   }
 
   @override
@@ -48,6 +47,25 @@ class WorkoutPageState extends State<WorkoutPage> {
       isWorkoutActive = preference.getBool('isWorkoutActive') ?? false;
       currentWorkoutName = preference.getString('currentWorkoutName') ?? '';
     });
+    if (currentWorkoutName.isNotEmpty) {
+      workoutNameNotifier = ValueNotifier<String>(currentWorkoutName);
+    }
+    List<String>? workoutList = await getWorkoutNames();
+    workoutListNotifier.value = workoutList ?? [];
+  }
+
+  Future<List<String>?> getWorkoutNames() async {
+    DatabaseReference workoutsRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(uid)
+        .child('Workouts');
+    DatabaseEvent snapshot = await workoutsRef.once();
+    Map<Object?, Object?>? workouts =
+        snapshot.snapshot.value as Map<Object?, Object?>?;
+    List<String>? workoutNames =
+        workouts?.keys.map((key) => key as String).toList() ?? [];
+    return workoutNames;
   }
 
   Future<Map<Object?, Object?>> getExercises() async {
@@ -109,20 +127,6 @@ class WorkoutPageState extends State<WorkoutPage> {
     exerciseWidgets = updatedWidgets;
   }
 
-  Future<List<String>?> getWorkoutNames() async {
-    DatabaseReference workoutsRef = FirebaseDatabase.instance
-        .ref()
-        .child('users')
-        .child(uid)
-        .child('Workouts');
-    DatabaseEvent snapshot = await workoutsRef.once();
-    Map<Object?, Object?>? workouts =
-        snapshot.snapshot.value as Map<Object?, Object?>?;
-    List<String>? workoutNames =
-        workouts?.keys.map((key) => key as String).toList() ?? [];
-    return workoutNames;
-  }
-
   void createWorkout(String workoutName) async {
     List<String>? workouts = await getWorkoutNames();
     if (workouts!.contains(workoutName)) {
@@ -139,15 +143,13 @@ class WorkoutPageState extends State<WorkoutPage> {
           .update({
         workoutName: {'default': 'No workouts Details yet'}
       });
+      workoutListNotifier.value = [...workouts, workoutName];
       setState(() {});
       return;
     }
   }
 
-  void editWorkoutName(
-    String newName,
-    String oldName,
-  ) async {
+  void editWorkoutName(String newName) async {
     List<String>? workouts = await getWorkoutNames();
     if (workouts!.contains(newName)) {
       if (mounted) {
@@ -155,6 +157,7 @@ class WorkoutPageState extends State<WorkoutPage> {
       }
       return;
     } else {
+      String oldName = currentWorkoutName;
       await FirebaseDatabase.instance
           .ref()
           .child('users')
@@ -206,6 +209,9 @@ class WorkoutPageState extends State<WorkoutPage> {
         .child(uid)
         .child('Current Workout')
         .remove();
+    workoutListNotifier.value =
+        workoutListNotifier.value.where((w) => w != workoutName).toList();
+
     currentWorkoutName = '';
     workoutNameNotifier = ValueNotifier<String>('');
     isWorkoutShowing = false;
@@ -284,9 +290,8 @@ class WorkoutPageState extends State<WorkoutPage> {
     await workoutRef.remove();
 
     setState(() {
-      exerciseWidgets = exerciseWidgets
-          .where((exerciseWidget) => exerciseWidget.uniqueId != exerciseName)
-          .toList();
+      exerciseWidgets =
+          exerciseWidgets.where((w) => w.uniqueId != exerciseName).toList();
     });
 
     exerciseWidgetsNotifier.value = List.from(exerciseWidgets);
@@ -328,57 +333,13 @@ class WorkoutPageState extends State<WorkoutPage> {
         .update(workoutData);
 
     await updateExerciseWidgets();
-    if (mounted) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        builder: (BuildContext context) {
-          return DraggableScrollableSheet(
-            expand: false,
-            initialChildSize: 0.95,
-            builder:
-                (BuildContext innerContext, ScrollController scrollController) {
-              return SingleChildScrollView(
-                child: buildBottomSheet(),
-              );
-            },
-          );
-        },
-      ).whenComplete(() {
-        setState(() {
-          isWorkoutShowing = false;
-          currentWorkoutName = workoutName;
-        });
-      });
-    }
+    buildWorkout();
   }
 
-  Future<void> continueWorkout(BuildContext context, String workoutName) async {
+  void continueWorkout(BuildContext context) async {
     isWorkoutShowing = true;
     await updateExerciseWidgets();
-    if (mounted) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        builder: (BuildContext context) {
-          return DraggableScrollableSheet(
-            expand: false,
-            initialChildSize: 0.95,
-            builder:
-                (BuildContext innerContext, ScrollController scrollController) {
-              return SingleChildScrollView(
-                child: buildBottomSheet(),
-              );
-            },
-          );
-        },
-      ).whenComplete(() {
-        setState(() {
-          isWorkoutShowing = false;
-          currentWorkoutName = workoutName;
-        });
-      });
-    }
+    buildWorkout();
   }
 
   void finishWorkout(String workoutName) async {
@@ -413,34 +374,55 @@ class WorkoutPageState extends State<WorkoutPage> {
     await workoutRef.remove();
   }
 
-  Widget buildBottomSheet() {
-    return Container(
-      width: double.infinity,
-      height: MediaQuery.of(context).size.height * 0.95,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(10),
-          topRight: Radius.circular(10),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey,
-            spreadRadius: 5,
-            blurRadius: 7,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          buildHeaderRow(),
-          buildExerciseList(),
-          buildActionButtons(),
-        ],
-      ),
-    );
+  void buildWorkout() {
+    if (mounted) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (BuildContext context) {
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.95,
+            builder:
+                (BuildContext innerContext, ScrollController scrollController) {
+              return SingleChildScrollView(
+                child: Container(
+                  width: double.infinity,
+                  height: MediaQuery.of(context).size.height * 0.95,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      topRight: Radius.circular(10),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey,
+                        spreadRadius: 5,
+                        blurRadius: 7,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      buildHeaderRow(),
+                      buildExerciseList(),
+                      buildActionButtons(),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ).whenComplete(() {
+        setState(() {
+          isWorkoutShowing = false;
+        });
+      });
+    }
   }
 
   Widget buildHeaderRow() {
@@ -501,10 +483,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                   onOkPressed: ({
                     String? textInput,
                   }) {
-                    editWorkoutName(
-                      textInput!,
-                      currentWorkoutName,
-                    );
+                    editWorkoutName(textInput!);
                   },
                   okButtonText: 'Edit',
                   cancelButtonText: 'Cancel',
@@ -524,10 +503,16 @@ class WorkoutPageState extends State<WorkoutPage> {
       child: ValueListenableBuilder<List<ExerciseWidget>>(
         valueListenable: exerciseWidgetsNotifier,
         builder: (context, value, child) {
-          return ListView(
-            controller: contentController,
-            children: value,
-          );
+          if (value.isEmpty) {
+            return const Center(
+              child: Text('No Exercises Created. Add an exercise to start.'),
+            );
+          } else {
+            return ListView(
+              controller: contentController,
+              children: value,
+            );
+          }
         },
       ),
     );
@@ -627,10 +612,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                         true,
                         title: 'Create a Workout',
                         contentController: 'Enter workout name',
-                        onOkPressed: (
-                            {String? textInput,
-                            String? workout,
-                            String? exercise}) {
+                        onOkPressed: ({String? textInput}) {
                           createWorkout(textInput!);
                         },
                         okButtonText: 'Add',
@@ -640,35 +622,32 @@ class WorkoutPageState extends State<WorkoutPage> {
                     child: const Text('Create a Workout'),
                   ),
                   const SizedBox(height: 20.0),
-                  FutureBuilder<List<String>?>(
-                    future: getWorkoutNames(),
-                    builder: (BuildContext context,
-                        AsyncSnapshot<List<String>?> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const CircularProgressIndicator();
+                  ValueListenableBuilder<List<String>>(
+                    valueListenable: workoutListNotifier,
+                    builder: (context, workoutList, child) {
+                      if (workoutList.isEmpty) {
+                        return const Center(
+                          child: Text('No Saved Workouts, Create A Workout'),
+                        );
                       } else {
-                        return snapshot.data != null && snapshot.data!.isEmpty
-                            ? const Text('No Saved Workouts, Create A Workout')
-                            : Column(
-                                children: [
-                                  ListView.builder(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: snapshot.data!.length,
-                                    itemBuilder: (context, index) {
-                                      return ElevatedButton(
-                                        onPressed: () {
-                                          startWorkout(
-                                              context, snapshot.data![index]);
-                                        },
-                                        child: Text(snapshot.data![index]),
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(height: 16.0),
-                                ],
-                              );
+                        return Column(
+                          children: [
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: workoutList.length,
+                              itemBuilder: (context, index) {
+                                return ElevatedButton(
+                                  onPressed: () {
+                                    startWorkout(context, workoutList[index]);
+                                  },
+                                  child: Text(workoutList[index]),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 16.0),
+                          ],
+                        );
                       }
                     },
                   ),
@@ -685,7 +664,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                 width: MediaQuery.of(context).size.width - 32,
                 child: GestureDetector(
                   onTap: () {
-                    continueWorkout(context, currentWorkoutName);
+                    continueWorkout(context);
                   },
                   child: Container(
                     padding: const EdgeInsets.all(8.0),
@@ -694,7 +673,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: Text(
-                      "Continue Workout: $currentWorkoutName",
+                      'Continue Workout - $currentWorkoutName',
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Colors.white),
                     ),
