@@ -411,9 +411,11 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
       width: MediaQuery.of(context).size.width,
       child: Card(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
@@ -440,6 +442,53 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                   },
                 ),
               ],
+            ),
+            Container(
+              padding: const EdgeInsets.only(top: 15.0, bottom: 8.0),
+              child: const Row(
+                children: [
+                  SizedBox(
+                    width: 73,
+                    child: Center(
+                      child: Text(
+                        'Set',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 100,
+                    child: Center(
+                      child: Text(
+                        'Rep',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 104,
+                    child: Center(
+                      child: Text(
+                        'lbs',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 96,
+                    child: Center(
+                      child: Text(
+                        '\u2713',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             KeyedSubtree(
               key: UniqueKey(),
