@@ -296,6 +296,14 @@ class WorkoutPageState extends State<WorkoutPage> {
     });
 
     exerciseWidgetsNotifier.value = List.from(exerciseWidgets);
+    if (exerciseWidgets.isEmpty) {
+      await FirebaseDatabase.instance
+          .ref()
+          .child('users')
+          .child(uid)
+          .child('Current Workout')
+          .update({'default': 'No workouts Details yet'});
+    }
   }
 
   void startWorkout(BuildContext context, String workoutName) async {
