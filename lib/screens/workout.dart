@@ -16,7 +16,7 @@ class WorkoutPage extends StatefulWidget {
 
 class WorkoutPageState extends State<WorkoutPage> {
   String uid = FirebaseAuth.instance.currentUser!.uid;
-  int _currentIndex = 2;
+  int _currentIndex = 1;
   ValueNotifier<List<ExerciseWidget>> exerciseWidgetsNotifier =
       ValueNotifier<List<ExerciseWidget>>([]);
   ValueNotifier<String> workoutNameNotifier = ValueNotifier<String>('');

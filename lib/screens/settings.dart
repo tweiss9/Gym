@@ -19,7 +19,7 @@ class SettingsPageState extends State<SettingsPage> {
   final GlobalKey<ScaffoldState> scaffoldGlobalKey = GlobalKey<ScaffoldState>();
   final FirebaseAuth auth = FirebaseAuth.instance;
   late Future<String?> userNameFuture;
-  int _currentIndex = 4;
+  int _currentIndex = 2;
 
   @override
   void initState() {

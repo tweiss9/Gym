@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '/screens/account.dart';
-import '/screens/history.dart';
+import 'package:gym/screens/history.dart';
 import '/screens/workout.dart';
-import '/screens/nutrition.dart';
 import '/screens/settings.dart';
 
 class CustomBottomNavigation extends StatelessWidget {
@@ -21,7 +19,7 @@ class CustomBottomNavigation extends StatelessWidget {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const AccountPage(),
+            builder: (context) => const HistoryPage(),
           ),
         );
         break;
@@ -29,27 +27,11 @@ class CustomBottomNavigation extends StatelessWidget {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const HistoryPage(),
-          ),
-        );
-        break;
-      case 2:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
             builder: (context) => const WorkoutPage(),
           ),
         );
         break;
-      case 3:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const NutritionPage(),
-          ),
-        );
-        break;
-      case 4:
+      case 2:
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const SettingsPage()),
@@ -65,14 +47,10 @@ class CustomBottomNavigation extends StatelessWidget {
     return BottomNavigationBar(
       currentIndex: currentIndex,
       onTap: (index) => _changePage(index, context),
-      backgroundColor: Colors.blue,
+      backgroundColor: Colors.grey[500],
       selectedItemColor: Colors.black,
-      unselectedItemColor: Colors.grey,
+      unselectedItemColor: Colors.grey[900],
       items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.account_circle),
-          label: 'Account',
-        ),
         BottomNavigationBarItem(
           icon: Icon(Icons.history),
           label: 'History',
@@ -80,10 +58,6 @@ class CustomBottomNavigation extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Icon(Icons.fitness_center),
           label: 'Workout',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.restaurant_menu),
-          label: 'Nutrition',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.settings),

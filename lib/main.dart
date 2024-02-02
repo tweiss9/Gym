@@ -4,7 +4,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'screens/sign_in.dart';
 import 'screens/workout.dart';
-import 'screens/loading_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,15 +24,11 @@ class MyApp extends StatelessWidget {
       home: StreamBuilder<User?>(
         stream: auth.authStateChanges(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.active) {
-            User? user = snapshot.data;
-            if (user == null) {
-              return const SignInPage();
-            } else {
-              return const WorkoutPage();
-            }
+          User? user = snapshot.data;
+          if (user == null) {
+            return const SignInPage();
           } else {
-            return const LoadingScreen();
+            return const WorkoutPage();
           }
         },
       ),
