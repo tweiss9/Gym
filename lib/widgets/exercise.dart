@@ -22,11 +22,13 @@ class ExerciseSet {
     required this.number,
     required this.reps,
     required this.weight,
+    required this.isSelected,
   });
 
   final int number;
   final int reps;
   final int weight;
+  final bool isSelected;
 }
 
 class ExerciseWidget extends StatefulWidget {
@@ -87,8 +89,9 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
             number: setMap['number'],
             reps: setMap['reps'],
             weight: setMap['weight'],
+            isSelected: setMap['isCompleted'],
           );
-          fetchedRows.add(_Row(set.number, set.reps, set.weight, false));
+          fetchedRows.add(_Row(set.number, set.reps, set.weight, set.isSelected));
         }
       }
     } else if (data is Map) {
@@ -98,8 +101,9 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
           number: int.parse(key),
           reps: value['reps'],
           weight: value['weight'],
+          isSelected: value['isCompleted'],
         );
-        fetchedRows.add(_Row(set.number, set.reps, set.weight, false));
+        fetchedRows.add(_Row(set.number, set.reps, set.weight, set.isSelected));
       });
     }
     if (mounted) {
@@ -107,39 +111,6 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
         _rows = fetchedRows;
       });
     }
-  }
-
-  List<DataColumn> createDataColumns() {
-    return [
-      DataColumn(
-        label: Container(
-          alignment: Alignment.center,
-          width: 25,
-          child: const Text('Set'),
-        ),
-      ),
-      DataColumn(
-        label: Container(
-          alignment: Alignment.center,
-          width: 50,
-          child: const Text('Rep'),
-        ),
-      ),
-      DataColumn(
-        label: Container(
-          alignment: Alignment.center,
-          width: 50,
-          child: const Text('lbs'),
-        ),
-      ),
-      DataColumn(
-        label: Container(
-          alignment: Alignment.center,
-          width: 50,
-          child: const Text('\u2713'),
-        ),
-      ),
-    ];
   }
 
   List<DataRow> createDataRows() {
@@ -311,6 +282,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
       'number': setNumber,
       'reps': 1,
       'weight': 10,
+      'isCompleted': false,
     });
 
     setState(() {
@@ -403,6 +375,24 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
         name = newName;
       });
     }
+  }
+
+  void toggleSelect(bool value, int rowIndex) async {
+    DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
+    await databaseReference
+        .child('users')
+        .child(uid)
+        .child("Current Workout")
+        .child(name)
+        .child("sets")
+        .child(_rows[rowIndex].setValue.toString())
+        .update({
+      'isCompleted': !isHighlighted,
+    });
+    setState(() {
+      isHighlighted = !isHighlighted;
+      _rows[rowIndex].isSelected = value;
+    });
   }
 
   @override
@@ -600,12 +590,9 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                             value: row.isSelected,
                             onChanged: (bool? value) {
                               if (value != null) {
-                                setState(() {
-                                  row.isSelected = value;
-                                });
+                                toggleSelect(value, index);
                               }
                             },
-                            activeColor: Colors.transparent,
                           ),
                         ],
                       ),

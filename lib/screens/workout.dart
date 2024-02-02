@@ -259,6 +259,7 @@ class WorkoutPageState extends State<WorkoutPage> {
           'number': 1,
           'reps': 1,
           'weight': 10,
+          'isCompleted': false,
         },
       },
     };
