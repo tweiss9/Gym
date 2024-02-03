@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_button/sign_in_button.dart';
 import 'package:flutter/material.dart';
 import 'workout.dart';
@@ -100,16 +101,16 @@ class SignInPageState extends State<SignInPage> {
           await FirebaseAuth.instance.signInWithCredential(credential);
 
       final User? user = userCredential.user;
-      if (user != null) {
-        await FirebaseDatabase.instance
-            .ref()
-            .child('users')
-            .child(user.uid)
-            .set({
-          'Account Information': {
-            'name': user.displayName,
-            'email': user.email
-          },
+      String uid = user!.uid;
+      SharedPreferences preference = await SharedPreferences.getInstance();
+      await preference.setString("uid", uid);
+      await preference.setString("name", user.displayName!);
+      DatabaseReference userRef =
+          FirebaseDatabase.instance.ref().child('users').child(uid);
+      DatabaseEvent snapshot = await userRef.once();
+      if (snapshot.snapshot.value == null) {
+        await userRef.set({
+          'Account Information': {'name': user.displayName, 'email': user.email},
           'Workouts': {}
         });
       }

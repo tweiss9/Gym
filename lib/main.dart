@@ -24,12 +24,7 @@ class MyApp extends StatelessWidget {
       home: StreamBuilder<User?>(
         stream: auth.authStateChanges(),
         builder: (context, snapshot) {
-          User? user = snapshot.data;
-          if (user == null) {
-            return const SignInPage();
-          } else {
-            return const WorkoutPage();
-          }
+          return snapshot.hasData ? const WorkoutPage() : const SignInPage();
         },
       ),
     );

@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,7 +14,7 @@ class WorkoutPage extends StatefulWidget {
 }
 
 class WorkoutPageState extends State<WorkoutPage> {
-  String uid = FirebaseAuth.instance.currentUser!.uid;
+  late String uid;
   int _currentIndex = 1;
   ValueNotifier<List<ExerciseWidget>> exerciseWidgetsNotifier =
       ValueNotifier<List<ExerciseWidget>>([]);
@@ -47,6 +46,7 @@ class WorkoutPageState extends State<WorkoutPage> {
       isWorkoutActive = preference.getBool('isWorkoutActive') ?? false;
       currentWorkoutName = preference.getString('currentWorkoutName') ?? '';
     });
+    uid = preference.getString('uid') ?? '';
     if (currentWorkoutName.isNotEmpty) {
       workoutNameNotifier = ValueNotifier<String>(currentWorkoutName);
     }

@@ -4,6 +4,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/firebase_database.dart'
     show DataSnapshot, DatabaseEvent, DatabaseReference, FirebaseDatabase;
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:gym/widgets/popup.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '/widgets/bottom_navigation.dart';
 import '/widgets/show_error.dart';
 import 'sign_in.dart';
@@ -19,17 +21,60 @@ class SettingsPageState extends State<SettingsPage> {
   final GlobalKey<ScaffoldState> scaffoldGlobalKey = GlobalKey<ScaffoldState>();
   final FirebaseAuth auth = FirebaseAuth.instance;
   late Future<String?> userNameFuture;
+  String uid = '';
   int _currentIndex = 2;
 
   @override
   void initState() {
     super.initState();
-    userNameFuture = fetchName();
+    initializeUid();
+    userNameFuture = fetchName(uid);
   }
 
-  Future<String> fetchName() async {
+  Future<void> initializeUid() async {
+    String uidValue = await getUid();
+    setState(() {
+      uid = uidValue;
+    });
+  }
+
+  Future<String> getUid() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    return preferences.getString('uid') ?? '';
+  }
+
+  Future<String> fetchName(String uid) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    String name = preferences.getString('name') ?? '';
+
+    if (name.isNotEmpty) {
+      return name;
+    }
+
     try {
-      String uid = auth.currentUser!.uid;
+      if (uid.isNotEmpty) {
+        DatabaseReference usersRef = FirebaseDatabase.instance
+            .ref()
+            .child('users')
+            .child(uid)
+            .child('Account Information')
+            .child('name');
+
+        DatabaseEvent event = await usersRef.once();
+        DataSnapshot snapshot = event.snapshot;
+
+        return snapshot.value?.toString() ?? '';
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorHandler.showError(context, 'Error fetching name: $e');
+      }
+    }
+    return '';
+  }
+
+  Future<void> editName(String uid, String newName) async {
+    try {
       DatabaseReference usersRef = FirebaseDatabase.instance
           .ref()
           .child('users')
@@ -37,66 +82,15 @@ class SettingsPageState extends State<SettingsPage> {
           .child('Account Information')
           .child('name');
 
-      DatabaseEvent event = await usersRef.once();
-      DataSnapshot snapshot = event.snapshot;
-
-      return snapshot.value.toString();
+      await usersRef.set(newName);
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      await preferences.setString('name', newName);
+      setState(() {
+        userNameFuture = fetchName(uid);
+      });
     } catch (e) {
       if (mounted) {
-        ErrorHandler.showError(context, 'Error fetching name: $e');
-      }
-      return null.toString();
-    }
-  }
-
-  Future<void> editName() async {
-    String? currentName = await fetchName();
-    String? newName;
-
-    if (mounted) {
-      newName = await showDialog<String>(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Edit Name'),
-            content: TextField(
-              decoration: const InputDecoration(labelText: 'New Name'),
-              onChanged: (value) {
-                newName = value;
-              },
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(newName);
-                },
-                child: const Text('Save'),
-              ),
-            ],
-          );
-        },
-      );
-
-      if (newName != null && newName != currentName) {
-        String uid = auth.currentUser!.uid;
-        String? updatedName = newName;
-
-        await FirebaseDatabase.instance
-            .ref()
-            .child('users')
-            .child(uid)
-            .child('Account Information')
-            .update({'name': updatedName});
-
-        setState(() {
-          userNameFuture = Future.value(updatedName);
-        });
+        ErrorHandler.showError(context, 'Error editing name: $e');
       }
     }
   }
@@ -128,13 +122,13 @@ class SettingsPageState extends State<SettingsPage> {
       if (firebaseUser != null) {
         if (userCredential.additionalUserInfo!.isNewUser) {
           setState(() {
-            userNameFuture = fetchName();
+            userNameFuture = fetchName(uid);
           });
         } else {
           if (mounted) {
             ErrorHandler.showError(
               context,
-              "User already exists with Google email:",
+              "Google Account Already Linked",
             );
           }
         }
@@ -149,6 +143,9 @@ class SettingsPageState extends State<SettingsPage> {
   Future<void> signOut() async {
     try {
       await FirebaseAuth.instance.signOut();
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      preferences.remove('uid');
+      preferences.remove('name');
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
@@ -175,18 +172,33 @@ class SettingsPageState extends State<SettingsPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             FutureBuilder<String?>(
-              future: fetchName(),
-              initialData: null,
+              future: userNameFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const CircularProgressIndicator();
-                } else {
+                } else if (snapshot.hasData && snapshot.data != null) {
                   return Text('Hello, ${snapshot.data}!');
+                } else {
+                  return const SizedBox();
                 }
               },
             ),
             ElevatedButton(
-              onPressed: editName,
+              onPressed: () async {
+                Popup(
+                  false,
+                  true,
+                  title: 'Edit Name',
+                  contentController: 'Edit your name below',
+                  onOkPressed: ({
+                    String? textInput,
+                  }) {
+                    editName(uid, textInput!);
+                  },
+                  okButtonText: 'Edit',
+                  cancelButtonText: 'Cancel',
+                ).show(context);
+              },
               child: const Text('Edit Name'),
             ),
             ElevatedButton(

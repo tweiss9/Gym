@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'workout.dart';
 import '/widgets/show_error.dart';
 
@@ -20,7 +21,6 @@ class CreateUserPageState extends State<CreateUserPage> {
   TextEditingController confirmPasswordController = TextEditingController();
 
   Map<String, String> errors = {};
-  static const String _usersNode = 'users';
 
   @override
   void initState() {
@@ -77,8 +77,11 @@ class CreateUserPageState extends State<CreateUserPage> {
         );
 
         String uid = userCredential.user!.uid;
+        SharedPreferences preference = await SharedPreferences.getInstance();
+        await preference.setString("uid", uid);
+        await preference.setString("name", nameController.text);
 
-        await FirebaseDatabase.instance.ref().child(_usersNode).child(uid).set({
+        await FirebaseDatabase.instance.ref().child('users').child(uid).set({
           'Account Information': {
             'name': nameController.text,
             'email': emailController.text,
