@@ -631,32 +631,35 @@ class WorkoutPageState extends State<WorkoutPage> {
                     child: const Text('Create a Workout'),
                   ),
                   const SizedBox(height: 20.0),
-                  ValueListenableBuilder<List<String>>(
-                    valueListenable: workoutListNotifier,
-                    builder: (context, workoutList, child) {
-                      if (workoutList.isEmpty) {
-                        return const Center(
-                          child: Text('No Saved Workouts, Create A Workout'),
-                        );
+                  FutureBuilder<List<String>?>(
+                    future: getWorkoutNames(),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<List<String>?> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox();
                       } else {
-                        return Column(
-                          children: [
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: workoutList.length,
-                              itemBuilder: (context, index) {
-                                return ElevatedButton(
-                                  onPressed: () {
-                                    startWorkout(context, workoutList[index]);
-                                  },
-                                  child: Text(workoutList[index]),
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 16.0),
-                          ],
-                        );
+                        return snapshot.data != null && snapshot.data!.isEmpty
+                            ? const Text('No Saved Workouts, Create A Workout')
+                            : Column(
+                                children: [
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: snapshot.data!.length,
+                                    itemBuilder: (context, index) {
+                                      return ElevatedButton(
+                                        onPressed: () {
+                                          startWorkout(
+                                              context, snapshot.data![index]);
+                                        },
+                                        child: Text(snapshot.data![index]),
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 16.0),
+                                ],
+                              );
                       }
                     },
                   ),
