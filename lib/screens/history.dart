@@ -15,7 +15,8 @@ class HistoryPageState extends State<HistoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('History Page'),
+        title: const Center(child: Text('Workout')),
+        automaticallyImplyLeading: false,
       ),
       body: const Center(
         child: Text('This is the History Page content.'),

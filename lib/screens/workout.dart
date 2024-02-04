@@ -603,7 +603,7 @@ class WorkoutPageState extends State<WorkoutPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Workout Page'),
+        title: const Center(child: Text('Workout')),
         automaticallyImplyLeading: false,
       ),
       body: Stack(

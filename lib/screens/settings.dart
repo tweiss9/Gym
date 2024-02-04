@@ -18,8 +18,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class SettingsPageState extends State<SettingsPage> {
-  final GlobalKey<ScaffoldState> scaffoldGlobalKey = GlobalKey<ScaffoldState>();
-  final FirebaseAuth auth = FirebaseAuth.instance;
   late Future<String?> userNameFuture;
   String uid = '';
   int _currentIndex = 2;
@@ -195,9 +193,9 @@ class SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: scaffoldGlobalKey,
       appBar: AppBar(
-        title: const Text('Settings Page'),
+        title: const Center(child: Text('Settings')),
+        automaticallyImplyLeading: false,
       ),
       body: Center(
         child: Column(
