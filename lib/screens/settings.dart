@@ -141,11 +141,18 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> signOut() async {
+    await FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(uid)
+        .child('Current Workout')
+        .remove();
     try {
       await FirebaseAuth.instance.signOut();
-      SharedPreferences preferences = await SharedPreferences.getInstance();
-      preferences.remove('uid');
-      preferences.remove('name');
+      SharedPreferences preference = await SharedPreferences.getInstance();
+      preference.setString('uid', '');
+      preference.setString('name', '');
+      preference.setBool('isWorkoutActive', false);
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
@@ -156,6 +163,31 @@ class SettingsPageState extends State<SettingsPage> {
     } catch (e) {
       if (mounted) {
         ErrorHandler.showError(context, "Error signing out: $e");
+      }
+    }
+  }
+
+  Future<void> deleteAccount(String uid) async {
+    try {
+      DatabaseReference usersRef =
+          FirebaseDatabase.instance.ref().child('users').child(uid);
+
+      await usersRef.remove();
+      SharedPreferences preference = await SharedPreferences.getInstance();
+      preference.setString('uid', '');
+      preference.setString('name', '');
+      preference.setBool('isWorkoutActive', false);
+
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const SignInPage()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorHandler.showError(context, "Error deleting account: $e");
       }
     }
   }
@@ -206,8 +238,40 @@ class SettingsPageState extends State<SettingsPage> {
               child: const Text('Sign In with Google'),
             ),
             ElevatedButton(
-              onPressed: signOut,
+              onPressed: () async {
+                Popup(
+                  false,
+                  false,
+                  title: 'Sign Out',
+                  contentController:
+                      'Are you sure you want to sign out? All unsaved data will be lost.',
+                  onOkPressed: ({String? textInput}) {
+                    signOut();
+                  },
+                  okButtonText: 'Sign Out',
+                  cancelButtonText: 'Cancel',
+                ).show(context);
+              },
               child: const Text('Sign Out'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Popup(
+                  false,
+                  false,
+                  title: 'Delete Account',
+                  contentController:
+                      'Are you sure you want to delete your account? This action cannot be undone.',
+                  onOkPressed: ({
+                    String? textInput,
+                  }) {
+                    deleteAccount(uid);
+                  },
+                  okButtonText: 'DELETE ACCOUNT',
+                  cancelButtonText: 'Cancel',
+                ).show(context);
+              },
+              child: const Text('Delete Account'),
             ),
           ],
         ),
