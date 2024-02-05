@@ -628,6 +628,13 @@ class WorkoutPageState extends State<WorkoutPage> {
                         cancelButtonText: 'Cancel',
                       ).show(context);
                     },
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.green,
+                      fixedSize: const Size(320, 40),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero),
+                    ),
                     child: const Text('Create a Workout'),
                   ),
                   const SizedBox(height: 20.0),
@@ -642,19 +649,30 @@ class WorkoutPageState extends State<WorkoutPage> {
                             snapshot.data!.isNotEmpty) {
                           return Column(
                             children: [
-                              ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: snapshot.data!.length,
-                                itemBuilder: (context, index) {
-                                  return ElevatedButton(
-                                    onPressed: () {
-                                      startWorkout(
-                                          context, snapshot.data![index]);
-                                    },
-                                    child: Text(snapshot.data![index]),
-                                  );
-                                },
+                              SizedBox(
+                                width:
+                                    320, // Set a specific width for the container
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: snapshot.data!.length,
+                                  itemBuilder: (context, index) {
+                                    return ElevatedButton(
+                                      onPressed: () {
+                                        startWorkout(
+                                            context, snapshot.data![index]);
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        foregroundColor: Colors.white,
+                                        backgroundColor: Colors.blueGrey,
+                                        fixedSize: const Size(300, 40),
+                                        shape: const RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.zero),
+                                      ),
+                                      child: Text(snapshot.data![index]),
+                                    );
+                                  },
+                                ),
                               ),
                               const SizedBox(height: 16.0),
                             ],
