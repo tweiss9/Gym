@@ -650,8 +650,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                           return Column(
                             children: [
                               SizedBox(
-                                width:
-                                    320, // Set a specific width for the container
+                                width: 320,
                                 child: ListView.builder(
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),

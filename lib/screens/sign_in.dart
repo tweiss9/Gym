@@ -145,9 +145,6 @@ class SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sign In Page'),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -177,14 +174,20 @@ class SignInPageState extends State<SignInPage> {
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 125),
             ElevatedButton(
               onPressed: () async {
                 await handleSignIn();
               },
+              style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blue,
+                  fixedSize: const Size(320, 40),
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero)),
               child: const Text('Sign In'),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -194,8 +197,15 @@ class SignInPageState extends State<SignInPage> {
                   ),
                 );
               },
+              style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.green,
+                  fixedSize: const Size(320, 40),
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero)),
               child: const Text('Create User'),
             ),
+            const SizedBox(height: 30),
             SignInButton(
               Buttons.googleDark,
               onPressed: () async {

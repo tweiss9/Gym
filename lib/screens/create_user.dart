@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:gym/screens/sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'workout.dart';
 import '/widgets/show_error.dart';
@@ -131,9 +132,6 @@ class CreateUserPageState extends State<CreateUserPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Account'),
-      ),
       body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -161,12 +159,36 @@ class CreateUserPageState extends State<CreateUserPage> {
                 buildFormField('Confirm Password', confirmPasswordController,
                     'confirmPassword',
                     isPassword: true),
-                const SizedBox(height: 20),
+                const SizedBox(height: 100),
                 ElevatedButton(
                   onPressed: () async {
                     performUserCreation();
                   },
+                  style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.green,
+                      fixedSize: const Size(320, 40),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero)),
                   child: const Text("Create"),
+                ),
+                const SizedBox(height: 40),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SignInPage(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.blue,
+                      fixedSize: const Size(320, 40),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero)),
+                  child: const Text("Go Back to Sign In Page"),
                 )
               ],
             ),
