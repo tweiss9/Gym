@@ -36,6 +36,22 @@ class SignInPageState extends State<SignInPage> {
           email: emailController.text,
           password: passwordController.text,
         );
+
+        User? user = FirebaseAuth.instance.currentUser;
+        String uid = user!.uid;
+        DatabaseReference nameRef = FirebaseDatabase.instance
+            .ref()
+            .child('users')
+            .child(uid)
+            .child('Account Information')
+            .child('name');
+        DatabaseEvent event = await nameRef.once();
+        DataSnapshot snapshot = event.snapshot;
+        String name = snapshot.value?.toString() ?? '';
+
+        SharedPreferences preference = await SharedPreferences.getInstance();
+        await preference.setString("uid", uid);
+        await preference.setString("name", name);
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -110,7 +126,10 @@ class SignInPageState extends State<SignInPage> {
       DatabaseEvent snapshot = await userRef.once();
       if (snapshot.snapshot.value == null) {
         await userRef.set({
-          'Account Information': {'name': user.displayName, 'email': user.email},
+          'Account Information': {
+            'name': user.displayName,
+            'email': user.email
+          },
           'Workouts': {}
         });
       }

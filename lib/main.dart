@@ -24,7 +24,9 @@ class MyApp extends StatelessWidget {
       home: StreamBuilder<User?>(
         stream: auth.authStateChanges(),
         builder: (context, snapshot) {
-          return snapshot.hasData ? const WorkoutPage() : const SignInPage();
+          return FirebaseAuth.instance.currentUser != null
+              ? const WorkoutPage()
+              : const SignInPage();
         },
       ),
     );

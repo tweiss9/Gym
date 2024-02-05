@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/firebase_database.dart'
     show DataSnapshot, DatabaseEvent, DatabaseReference, FirebaseDatabase;
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_button/sign_in_button.dart';
 import 'package:gym/widgets/popup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/widgets/bottom_navigation.dart';
@@ -20,12 +21,18 @@ class SettingsPage extends StatefulWidget {
 class SettingsPageState extends State<SettingsPage> {
   late Future<String?> userNameFuture;
   String uid = '';
+  bool isGoogleAccount = false;
   int _currentIndex = 2;
 
   @override
   void initState() {
     super.initState();
     initializeUid();
+    checkIfGoogleAccount().then((bool result) {
+      setState(() {
+        isGoogleAccount = result;
+      });
+    });
     userNameFuture = fetchName(uid);
   }
 
@@ -69,6 +76,19 @@ class SettingsPageState extends State<SettingsPage> {
       }
     }
     return '';
+  }
+
+  Future<bool> checkIfGoogleAccount() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      for (UserInfo userInfo in user.providerData) {
+        if (userInfo.providerId == 'google.com') {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   Future<void> editName(String uid, String newName) async {
@@ -126,7 +146,7 @@ class SettingsPageState extends State<SettingsPage> {
           if (mounted) {
             ErrorHandler.showError(
               context,
-              "Google Account Already Linked",
+              "The Google Account is Already Linked to Another Account",
             );
           }
         }
@@ -167,6 +187,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Future<void> deleteAccount(String uid) async {
     try {
+      User? user = FirebaseAuth.instance.currentUser;
       DatabaseReference usersRef =
           FirebaseDatabase.instance.ref().child('users').child(uid);
 
@@ -175,6 +196,10 @@ class SettingsPageState extends State<SettingsPage> {
       preference.setString('uid', '');
       preference.setString('name', '');
       preference.setBool('isWorkoutActive', false);
+
+      if (user != null && user.uid == uid) {
+        await user.delete();
+      }
 
       if (mounted) {
         Navigator.pushAndRemoveUntil(
@@ -231,9 +256,24 @@ class SettingsPageState extends State<SettingsPage> {
               },
               child: const Text('Edit Name'),
             ),
-            ElevatedButton(
-              onPressed: signInWithGoogle,
-              child: const Text('Sign In with Google'),
+            FutureBuilder(
+              future: Future.value(isGoogleAccount),
+              builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox();
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else if (snapshot.data == true) {
+                  return const Text('Google account Connected');
+                } else {
+                  return SignInButton(
+                    Buttons.googleDark,
+                    onPressed: () async {
+                      await signInWithGoogle();
+                    },
+                  );
+                }
+              },
             ),
             ElevatedButton(
               onPressed: () async {
