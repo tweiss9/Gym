@@ -232,12 +232,40 @@ class SettingsPageState extends State<SettingsPage> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const CircularProgressIndicator();
                 } else if (snapshot.hasData && snapshot.data != null) {
-                  return Text('Hello, ${snapshot.data}!');
+                  return Text(
+                    'Hello, ${snapshot.data}!',
+                    style: const TextStyle(
+                      fontSize: 32, 
+                    ),
+                  );
                 } else {
                   return const SizedBox();
                 }
               },
             ),
+            const SizedBox(height: 20),
+            FutureBuilder(
+              future: Future.value(isGoogleAccount),
+              builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox();
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else if (snapshot.data == true) {
+                  return const Text('Google account Connected', style: TextStyle(
+                      fontSize: 18, 
+                    ));
+                } else {
+                  return SignInButton(
+                    Buttons.googleDark,
+                    onPressed: () async {
+                      await signInWithGoogle();
+                    },
+                  );
+                }
+              },
+            ),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
                 Popup(
@@ -254,27 +282,15 @@ class SettingsPageState extends State<SettingsPage> {
                   cancelButtonText: 'Cancel',
                 ).show(context);
               },
+              style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blue,
+                  fixedSize: const Size(320, 40),
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero)),
               child: const Text('Edit Name'),
             ),
-            FutureBuilder(
-              future: Future.value(isGoogleAccount),
-              builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SizedBox();
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else if (snapshot.data == true) {
-                  return const Text('Google account Connected');
-                } else {
-                  return SignInButton(
-                    Buttons.googleDark,
-                    onPressed: () async {
-                      await signInWithGoogle();
-                    },
-                  );
-                }
-              },
-            ),
+            const SizedBox(height: 220),
             ElevatedButton(
               onPressed: () async {
                 Popup(
@@ -290,8 +306,15 @@ class SettingsPageState extends State<SettingsPage> {
                   cancelButtonText: 'Cancel',
                 ).show(context);
               },
+              style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.red,
+                  fixedSize: const Size(320, 40),
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero)),
               child: const Text('Sign Out'),
             ),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
                 Popup(
@@ -309,6 +332,12 @@ class SettingsPageState extends State<SettingsPage> {
                   cancelButtonText: 'Cancel',
                 ).show(context);
               },
+              style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.red,
+                  fixedSize: const Size(320, 40),
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero)),
               child: const Text('Delete Account'),
             ),
           ],
