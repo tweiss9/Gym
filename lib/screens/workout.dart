@@ -45,8 +45,8 @@ class WorkoutPageState extends State<WorkoutPage> {
     setState(() {
       isWorkoutActive = preference.getBool('isWorkoutActive') ?? false;
       currentWorkoutName = preference.getString('currentWorkoutName') ?? '';
+      uid = preference.getString('uid') ?? '';
     });
-    uid = preference.getString('uid') ?? '';
     if (currentWorkoutName.isNotEmpty) {
       workoutNameNotifier = ValueNotifier<String>(currentWorkoutName);
     }
@@ -638,28 +638,31 @@ class WorkoutPageState extends State<WorkoutPage> {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const SizedBox();
                       } else {
-                        return snapshot.data != null && snapshot.data!.isEmpty
-                            ? const Text('No Saved Workouts, Create A Workout')
-                            : Column(
-                                children: [
-                                  ListView.builder(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: snapshot.data!.length,
-                                    itemBuilder: (context, index) {
-                                      return ElevatedButton(
-                                        onPressed: () {
-                                          startWorkout(
-                                              context, snapshot.data![index]);
-                                        },
-                                        child: Text(snapshot.data![index]),
-                                      );
+                        if (snapshot.data != null &&
+                            snapshot.data!.isNotEmpty) {
+                          return Column(
+                            children: [
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: snapshot.data!.length,
+                                itemBuilder: (context, index) {
+                                  return ElevatedButton(
+                                    onPressed: () {
+                                      startWorkout(
+                                          context, snapshot.data![index]);
                                     },
-                                  ),
-                                  const SizedBox(height: 16.0),
-                                ],
-                              );
+                                    child: Text(snapshot.data![index]),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 16.0),
+                            ],
+                          );
+                        } else {
+                          return const Text(
+                              'No Saved Workouts, Create A Workout');
+                        }
                       }
                     },
                   ),
