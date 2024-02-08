@@ -334,13 +334,30 @@ class WorkoutPageState extends State<WorkoutPage> {
     Map<String, Object?>? workoutData =
         Map<String, Object?>.from(snapshot.snapshot.value as Map);
     workoutData['Workout Name'] = workoutName;
+    // add all the sets childs a isCompleted field and set it to false
+    workoutData.forEach((key, value) {
+      if (value is Map<Object?, Object?> && key != 'Workout Name') {
+        if (value.containsKey('sets') && value['sets'] is List) {
+          List<dynamic>? sets = value['sets'] as List<dynamic>?;
+
+          if (sets != null) {
+            for (int i = 0; i < sets.length; i++) {
+              if (sets[i] is Map<Object?, Object?>) {
+                (sets[i] as Map<Object?, Object?>)['isCompleted'] = false;
+              }
+            }
+          }
+        }
+      }
+    });
     await FirebaseDatabase.instance
         .ref()
         .child('users')
         .child(uid)
         .child('Current Workout')
         .update(workoutData);
-
+  
+    
     await updateExerciseWidgets();
     buildWorkout();
   }
