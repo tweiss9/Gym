@@ -334,7 +334,6 @@ class WorkoutPageState extends State<WorkoutPage> {
     Map<String, Object?>? workoutData =
         Map<String, Object?>.from(snapshot.snapshot.value as Map);
     workoutData['Workout Name'] = workoutName;
-    // add all the sets childs a isCompleted field and set it to false
     workoutData.forEach((key, value) {
       if (value is Map<Object?, Object?> && key != 'Workout Name') {
         if (value.containsKey('sets') && value['sets'] is List) {
