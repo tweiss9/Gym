@@ -370,17 +370,67 @@ class WorkoutPageState extends State<WorkoutPage> {
     Map<Object?, Object?>? workoutData =
         snapshot.snapshot.value as Map<Object?, Object?>?;
 
-    if (workoutData != null) {
-      await FirebaseDatabase.instance
-          .ref()
-          .child('users')
-          .child(uid)
-          .child('Workouts')
-          .child(workoutName)
-          .set(workoutData);
+    workoutData!.forEach((key, value) {
+      if (value is Map<Object?, Object?> && key != 'Workout Name') {
+        if (value.containsKey('sets') && value['sets'] is List) {
+          List<dynamic>? sets = value['sets'] as List<dynamic>?;
+          if (sets != null) {
+            for (int i = 0; i < sets.length; i++) {
+              if (sets[i] is Map<Object?, Object?> &&
+                  sets[i].containsKey('isCompleted')) {
+                (sets[i] as Map<Object?, Object?>).remove('isCompleted');
+              }
+            }
+          }
+        }
+      }
+    });
+
+    await FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(uid)
+        .child('Workouts')
+        .child(workoutName)
+        .set(workoutData);
+
+    Map<Object?, Object?>? historyData = removeUnwantedFields(workoutData);
+
+    DateTime now = DateTime.now();
+    String date = '${now.month}-${now.day}-${now.year}';
+    await FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(uid)
+        .child('History')
+        .push()
+        .set({'Date': date, 'Name': workoutName, 'Workout Data': historyData});
+    await workoutRef.remove();
+  }
+
+  dynamic removeUnwantedFields(dynamic data) {
+    if (data == null) {
+      return null;
     }
 
-    await workoutRef.remove();
+    if (data is Map<Object?, Object?>) {
+      Map<Object?, Object?> cleanedData = Map.from(data);
+
+      cleanedData.remove('Workout Name');
+      cleanedData.remove('name');
+      cleanedData.forEach((key, value) {
+        cleanedData[key] = removeUnwantedFields(value);
+      });
+
+      return cleanedData;
+    } else if (data is List) {
+      List cleanedList = [];
+      for (var item in data) {
+        cleanedList.add(removeUnwantedFields(item));
+      }
+      return cleanedList;
+    }
+    return data;
   }
 
   void buildWorkout() {
