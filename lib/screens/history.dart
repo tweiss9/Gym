@@ -2,6 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/bottom_navigation.dart';
+import '../widgets/popup.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -111,26 +112,83 @@ class HistoryPageState extends State<HistoryPage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text("Workout Details"),
+            title: Center(
+              child: Text(
+                date,
+                style: const TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
             content: SizedBox(
               width: MediaQuery.of(context).size.width * 0.9,
-              height: MediaQuery.of(context).size.height * 0.8,
+              height: MediaQuery.of(context).size.height * 0.9,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Name: $workoutName"),
-                    Text("Date: $date"),
+                    Center(
+                      child: Text(
+                        workoutName,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                     ListView.builder(
                       shrinkWrap: true,
                       itemCount: workoutDataList.length,
                       itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text("${workoutDataList[index]['Exercise']}"),
-                          subtitle: Text(
-                              "Set: ${workoutDataList[index]['Set']}, Reps: ${workoutDataList[index]['Reps']}, Weight: ${workoutDataList[index]['Weight']}"),
-                        );
+                        if (workoutDataList[index]['Exercise'] == '') {
+                          return Center(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Text(
+                                "Set: ${workoutDataList[index]['Set']}, Reps: ${workoutDataList[index]['Reps']}, Weight: ${workoutDataList[index]['Weight']}",
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ),
+                          );
+                        } else {
+                          return Center(
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Text(
+                                    "${workoutDataList[index]['Exercise']}",
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Text(
+                                    "Set: ${workoutDataList[index]['Set']}, Reps: ${workoutDataList[index]['Reps']}, Weight: ${workoutDataList[index]['Weight']}",
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
                       },
                     ),
                   ],
@@ -140,15 +198,52 @@ class HistoryPageState extends State<HistoryPage> {
             actions: <Widget>[
               TextButton(
                 onPressed: () {
+                  Popup(
+                    false,
+                    false,
+                    title: 'Delete Exercise Data',
+                    contentController:
+                        'Are you sure you want to delete this workout in your history? This cannot be undone.',
+                    onOkPressed: ({String? textInput}) {
+                      deleteHistoryExercise(key);
+                    },
+                    okButtonText: 'DELETE',
+                    cancelButtonText: 'Cancel',
+                  ).show(context);
+                },
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: const Text('Close'),
+                child: const Text(
+                  'Close',
+                  style: TextStyle(fontSize: 18),
+                ),
               ),
             ],
           );
         },
       );
     }
+  }
+
+  void deleteHistoryExercise(String key) {
+    DatabaseReference historyRef = FirebaseDatabase.instance
+        .ref()
+        .child('users')
+        .child(uid!)
+        .child('History')
+        .child(key);
+
+    historyRef.remove().then((_) {
+      setState(() {});
+      Navigator.of(context).pop();
+    });
   }
 
   @override
