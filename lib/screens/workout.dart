@@ -158,18 +158,20 @@ class WorkoutPageState extends State<WorkoutPage> {
       return;
     } else {
       String oldName = currentWorkoutName;
-      await FirebaseDatabase.instance
+      DatabaseEvent snapshot = await FirebaseDatabase.instance
           .ref()
           .child('users')
           .child(uid)
           .child('Current Workout')
-          .update({'Workout Name': newName});
-
-      setState(() {
-        currentWorkoutName = newName;
-        workoutNameNotifier.value = newName;
-      });
-
+          .once();
+      if (snapshot.snapshot.value != null) {
+        await FirebaseDatabase.instance
+            .ref()
+            .child('users')
+            .child(uid)
+            .child('Current Workout')
+            .update({'Workout Name': newName});
+      }
       final ref = FirebaseDatabase.instance
           .ref()
           .child('users')
@@ -188,6 +190,10 @@ class WorkoutPageState extends State<WorkoutPage> {
           .update({'Workout Name': newName});
       SharedPreferences preference = await SharedPreferences.getInstance();
       preference.setString('currentWorkoutName', newName);
+      setState(() {
+        currentWorkoutName = newName;
+        workoutNameNotifier.value = newName;
+      });
     }
     return;
   }
@@ -306,11 +312,131 @@ class WorkoutPageState extends State<WorkoutPage> {
     }
   }
 
-  void startWorkout(BuildContext context, String workoutName) async {
+  void workoutPopup(BuildContext context, String workoutName) {
     if (isWorkoutActive) {
       ErrorHandler.showError(context, 'A Workout has already started');
       return;
     }
+    workoutNameNotifier.value = workoutName;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Stack(
+            alignment: Alignment.topRight,
+            children: [
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.75,
+                height: MediaQuery.of(context).size.height * 0.4,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    ValueListenableBuilder<String>(
+                      valueListenable: workoutNameNotifier,
+                      builder: (context, value, child) {
+                        return Text(
+                          value,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    TextButton(
+                      onPressed: () {
+                        Popup(
+                          false,
+                          true,
+                          title: 'Edit Workout Name',
+                          contentController: 'Enter new workout name',
+                          onOkPressed: ({String? textInput}) {
+                            editWorkoutName(textInput!);
+                          },
+                          okButtonText: 'Edit',
+                          cancelButtonText: 'Cancel',
+                        ).show(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.blue,
+                        fixedSize: const Size(200, 40),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero,
+                        ),
+                      ),
+                      child:
+                          const Text('Edit Name', textAlign: TextAlign.center),
+                    ),
+                    const SizedBox(height: 20),
+                    TextButton(
+                      onPressed: () {
+                        Popup(
+                          false,
+                          false,
+                          title: 'Delete Workout',
+                          contentController:
+                              'Are you sure you want to delete this workout?',
+                          onOkPressed: ({
+                            String? textInput,
+                          }) {
+                            deleteWorkout(workoutName);
+                          },
+                          okButtonText: 'Delete',
+                          cancelButtonText: 'Cancel',
+                        ).show(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.red,
+                        fixedSize: const Size(200, 40),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero,
+                        ),
+                      ),
+                      child: const Text('Delete', textAlign: TextAlign.center),
+                    ),
+                    const SizedBox(height: 20),
+                    TextButton(
+                      onPressed: () {
+                        startWorkout(context, workoutName);
+                        Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.green,
+                        fixedSize: const Size(200, 40),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero,
+                        ),
+                      ),
+                      child: const Text('Start', textAlign: TextAlign.center),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                right: 0,
+                top: 0,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    workoutNameNotifier = ValueNotifier<String>('');
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void startWorkout(BuildContext context, String workoutName) async {
     currentWorkoutName = workoutName;
     workoutNameNotifier.value = workoutName;
     isWorkoutShowing = true;
@@ -355,8 +481,6 @@ class WorkoutPageState extends State<WorkoutPage> {
         .child(uid)
         .child('Current Workout')
         .update(workoutData);
-  
-    
     await updateExerciseWidgets();
     buildWorkout();
   }
@@ -510,8 +634,9 @@ class WorkoutPageState extends State<WorkoutPage> {
             thickness: 4.0,
           ),
         ),
+        const SizedBox(height: 10.0),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             IconButton(
               icon: const Icon(
@@ -724,7 +849,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                                   itemBuilder: (context, index) {
                                     return ElevatedButton(
                                       onPressed: () {
-                                        startWorkout(
+                                        workoutPopup(
                                             context, snapshot.data![index]);
                                       },
                                       style: ElevatedButton.styleFrom(
