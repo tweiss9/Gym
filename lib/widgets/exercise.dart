@@ -91,7 +91,8 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
             weight: setMap['weight'],
             isSelected: setMap['isCompleted'],
           );
-          fetchedRows.add(_Row(set.number, set.reps, set.weight, set.isSelected));
+          fetchedRows
+              .add(_Row(set.number, set.reps, set.weight, set.isSelected));
         }
       }
     } else if (data is Map) {
@@ -321,6 +322,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
             .child("sets")
             .child(newSetNumber.toString())
             .set({
+          'isCompleted': _rows[i].isSelected,
           'number': newSetNumber,
           'reps': _rows[i].repsValue,
           'weight': _rows[i].weightValue,
@@ -400,6 +402,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Card(
+        color: const Color.fromRGBO(255, 255, 255, 0.9),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -484,6 +487,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
               key: UniqueKey(),
               child: ListView.builder(
                 shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: _rows.length,
                 itemBuilder: (context, index) {
                   _Row row = _rows[index];

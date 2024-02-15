@@ -584,34 +584,55 @@ class WorkoutPageState extends State<WorkoutPage> {
             initialChildSize: 0.95,
             builder:
                 (BuildContext innerContext, ScrollController scrollController) {
-              return SingleChildScrollView(
-                child: Container(
-                  width: double.infinity,
-                  height: MediaQuery.of(context).size.height * 0.95,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(10),
-                      topRight: Radius.circular(10),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey,
-                        spreadRadius: 5,
-                        blurRadius: 7,
-                        offset: Offset(0, 3),
+              return Stack(
+                children: [
+                  SingleChildScrollView(
+                    controller: scrollController,
+                    child: Container(
+                      width: double.infinity,
+                      height: MediaQuery.of(context).size.height,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(10),
+                          topRight: Radius.circular(10),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey,
+                            spreadRadius: 5,
+                            blurRadius: 7,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
                       ),
-                    ],
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          buildHeaderRow(),
+                          buildExerciseList(),
+                        ],
+                      ),
+                    ),
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      buildHeaderRow(),
-                      buildExerciseList(),
-                      buildActionButtons(),
-                    ],
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    child: GestureDetector(
+                      onVerticalDragUpdate: (details) {
+                        if (details.delta.dy > 0) {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: 40,
+                        color: Colors.transparent,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               );
             },
           );
@@ -692,6 +713,7 @@ class WorkoutPageState extends State<WorkoutPage> {
             ),
           ],
         ),
+        const SizedBox(height: 10.0),
       ],
     );
   }
@@ -699,18 +721,32 @@ class WorkoutPageState extends State<WorkoutPage> {
   Widget buildExerciseList() {
     final contentController = ScrollController();
     return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.78,
+      height: MediaQuery.of(context).size.height * .85,
       child: ValueListenableBuilder<List<ExerciseWidget>>(
         valueListenable: exerciseWidgetsNotifier,
         builder: (context, value, child) {
           if (value.isEmpty) {
-            return const Center(
-              child: Text('No Exercises Created. Add an exercise to start.'),
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Center(
+                  child:
+                      Text('No Exercises Created. Add an exercise to start.'),
+                ),
+                buildActionButtons(),
+              ],
             );
           } else {
-            return ListView(
+            return ListView.builder(
               controller: contentController,
-              children: value,
+              itemCount: value.length + 1,
+              itemBuilder: (context, index) {
+                if (index == value.length) {
+                  return buildActionButtons();
+                } else {
+                  return value[index];
+                }
+              },
             );
           }
         },
@@ -719,74 +755,87 @@ class WorkoutPageState extends State<WorkoutPage> {
   }
 
   Widget buildActionButtons() {
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      color: Colors.white,
-      child: Row(
-        children: [
-          TextButton(
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.blue,
-            ),
-            onPressed: () {
-              Popup(
-                false,
-                true,
-                title: 'Create an Exercise',
-                contentController: 'Enter exercise name',
-                onOkPressed: ({String? textInput}) {
-                  createExercise(currentWorkoutName, textInput!);
-                },
-                okButtonText: 'Create',
-                cancelButtonText: 'Cancel',
-              ).show(context);
-            },
-            child: const Text('Create Exercise',
-                style: TextStyle(color: Colors.white)),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 30.0),
+        TextButton(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: Colors.blue,
+            fixedSize: const Size(300, 40),
+            shape:
+                const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           ),
-          TextButton(
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.green,
-            ),
-            onPressed: () {
-              Popup(
-                false,
-                false,
-                title: 'Finish Workout',
-                contentController:
-                    'Are you sure you want to finish this workout?',
-                onOkPressed: ({String? textInput}) {
-                  finishWorkout(currentWorkoutName);
-                },
-                okButtonText: 'Finish Workout',
-                cancelButtonText: 'Stay on Workout',
-              ).show(context);
-            },
-            child: const Text('Finish Workout',
-                style: TextStyle(color: Colors.white)),
+          onPressed: () {
+            Popup(
+              false,
+              true,
+              title: 'Create an Exercise',
+              contentController: 'Enter exercise name',
+              onOkPressed: ({String? textInput}) {
+                createExercise(currentWorkoutName, textInput!);
+              },
+              okButtonText: 'Create',
+              cancelButtonText: 'Cancel',
+            ).show(context);
+          },
+          child: const Text('Create Exercise',
+              style: TextStyle(color: Colors.white)),
+        ),
+        const SizedBox(height: 10.0),
+        TextButton(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: Colors.green,
+            fixedSize: const Size(300, 40),
+            shape:
+                const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           ),
-          TextButton(
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            onPressed: () {
-              Popup(
-                false,
-                false,
-                title: 'Cancel Workout',
-                contentController:
-                    'Are you sure you want to cancel this workout?',
-                onOkPressed: ({String? textInput}) {
-                  cancelWorkout();
-                },
-                okButtonText: 'Cancel Workout',
-                cancelButtonText: 'Stay on Workout',
-              ).show(context);
-            },
-            child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+          onPressed: () {
+            Popup(
+              false,
+              false,
+              title: 'Finish Workout',
+              contentController:
+                  'Are you sure you want to finish this workout?',
+              onOkPressed: ({String? textInput}) {
+                finishWorkout(currentWorkoutName);
+              },
+              okButtonText: 'Finish Workout',
+              cancelButtonText: 'Stay on Workout',
+            ).show(context);
+          },
+          child: const Text('Finish Workout',
+              style: TextStyle(color: Colors.white)),
+        ),
+        const SizedBox(height: 10.0),
+        TextButton(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: Colors.red,
+            fixedSize: const Size(300, 40),
+            shape:
+                const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           ),
-        ],
-      ),
+          onPressed: () {
+            Popup(
+              false,
+              false,
+              title: 'Cancel Workout',
+              contentController:
+                  'Are you sure you want to cancel this workout?',
+              onOkPressed: ({String? textInput}) {
+                cancelWorkout();
+              },
+              okButtonText: 'Cancel Workout',
+              cancelButtonText: 'Stay on Workout',
+            ).show(context);
+          },
+          child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+        ),
+        const SizedBox(height: 40.0),
+      ],
     );
   }
 
