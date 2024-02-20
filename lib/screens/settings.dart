@@ -219,7 +219,14 @@ class SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Center(child: Text('Settings')),
+        title: const Center(
+            child: Text(
+          'Settings',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 32,
+          ),
+        )),
         automaticallyImplyLeading: false,
       ),
       body: Center(
@@ -235,7 +242,7 @@ class SettingsPageState extends State<SettingsPage> {
                   return Text(
                     'Hello, ${snapshot.data}!',
                     style: const TextStyle(
-                      fontSize: 32, 
+                      fontSize: 32,
                     ),
                   );
                 } else {
@@ -252,9 +259,10 @@ class SettingsPageState extends State<SettingsPage> {
                 } else if (snapshot.hasError) {
                   return Text('Error: ${snapshot.error}');
                 } else if (snapshot.data == true) {
-                  return const Text('Google account Connected', style: TextStyle(
-                      fontSize: 18, 
-                    ));
+                  return const Text('Google account Connected',
+                      style: TextStyle(
+                        fontSize: 20,
+                      ));
                 } else {
                   return SignInButton(
                     Buttons.googleDark,
@@ -288,7 +296,12 @@ class SettingsPageState extends State<SettingsPage> {
                   fixedSize: const Size(320, 40),
                   shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.zero)),
-              child: const Text('Edit Name'),
+              child: const Text(
+                'Edit Name',
+                style: TextStyle(
+                  fontSize: 20,
+                ),
+              ),
             ),
             const SizedBox(height: 220),
             ElevatedButton(
@@ -312,7 +325,10 @@ class SettingsPageState extends State<SettingsPage> {
                   fixedSize: const Size(320, 40),
                   shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.zero)),
-              child: const Text('Sign Out'),
+              child: const Text('Sign Out',
+                  style: TextStyle(
+                    fontSize: 20,
+                  )),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -338,7 +354,10 @@ class SettingsPageState extends State<SettingsPage> {
                   fixedSize: const Size(320, 40),
                   shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.zero)),
-              child: const Text('Delete Account'),
+              child: const Text('Delete Account',
+                  style: TextStyle(
+                    fontSize: 20,
+                  )),
             ),
           ],
         ),

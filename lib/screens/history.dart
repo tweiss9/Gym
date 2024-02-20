@@ -250,7 +250,14 @@ class HistoryPageState extends State<HistoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Center(child: Text('Workout')),
+        title: const Center(
+            child: Text(
+          'History',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 32,
+          ),
+        )),
         automaticallyImplyLeading: false,
       ),
       body: Stack(
@@ -302,7 +309,11 @@ class HistoryPageState extends State<HistoryPage> {
                                             ),
                                           ),
                                           child: Text(
-                                              '${snapshot.data![index]['Date']!} - ${snapshot.data![index]['Name']!}'),
+                                            '${snapshot.data![index]['Date']!} - ${snapshot.data![index]['Name']!}',
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                            ),
+                                          ),
                                         );
                                       },
                                     ),
@@ -311,8 +322,16 @@ class HistoryPageState extends State<HistoryPage> {
                                 ],
                               );
                             } else {
-                              return const Text(
-                                  'No Finished Workouts, Finish a Workout');
+                              return const Padding(
+                                padding: EdgeInsets.only(top: 120.0),
+                                child: Text(
+                                  'No Finished Workouts',
+                                  style: TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
                             }
                           }
                         },

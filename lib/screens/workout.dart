@@ -730,9 +730,11 @@ class WorkoutPageState extends State<WorkoutPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Center(
-                  child:
-                      Text('No Exercises Created. Add an exercise to start.'),
+                  child: Text('No Exercises Created',
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                 ),
+                const SizedBox(height: 50.0),
                 buildActionButtons(),
               ],
             );
@@ -781,7 +783,9 @@ class WorkoutPageState extends State<WorkoutPage> {
             ).show(context);
           },
           child: const Text('Create Exercise',
-              style: TextStyle(color: Colors.white)),
+              style: TextStyle(
+                fontSize: 20,
+              )),
         ),
         const SizedBox(height: 10.0),
         TextButton(
@@ -806,8 +810,7 @@ class WorkoutPageState extends State<WorkoutPage> {
               cancelButtonText: 'Stay on Workout',
             ).show(context);
           },
-          child: const Text('Finish Workout',
-              style: TextStyle(color: Colors.white)),
+          child: const Text('Finish Workout', style: TextStyle(fontSize: 20)),
         ),
         const SizedBox(height: 10.0),
         TextButton(
@@ -832,7 +835,7 @@ class WorkoutPageState extends State<WorkoutPage> {
               cancelButtonText: 'Stay on Workout',
             ).show(context);
           },
-          child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+          child: const Text('Cancel', style: TextStyle(fontSize: 20)),
         ),
         const SizedBox(height: 40.0),
       ],
@@ -843,7 +846,14 @@ class WorkoutPageState extends State<WorkoutPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Center(child: Text('Workout')),
+        title: const Center(
+            child: Text(
+          'Workout',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 32,
+          ),
+        )),
         automaticallyImplyLeading: false,
       ),
       body: Stack(
@@ -854,6 +864,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  const SizedBox(height: 20.0),
                   ElevatedButton(
                     onPressed: () {
                       Popup(
@@ -875,7 +886,12 @@ class WorkoutPageState extends State<WorkoutPage> {
                       shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.zero),
                     ),
-                    child: const Text('Create a Workout'),
+                    child: const Text(
+                      'Create a Workout',
+                      style: TextStyle(
+                        fontSize: 20,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 20.0),
                   FutureBuilder<List<String>?>(
@@ -908,7 +924,12 @@ class WorkoutPageState extends State<WorkoutPage> {
                                         shape: const RoundedRectangleBorder(
                                             borderRadius: BorderRadius.zero),
                                       ),
-                                      child: Text(snapshot.data![index]),
+                                      child: Text(
+                                        snapshot.data![index],
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                        ),
+                                      ),
                                     );
                                   },
                                 ),
@@ -917,8 +938,16 @@ class WorkoutPageState extends State<WorkoutPage> {
                             ],
                           );
                         } else {
-                          return const Text(
-                              'No Saved Workouts, Create A Workout');
+                          return const Padding(
+                            padding: EdgeInsets.only(top: 36.0),
+                            child: Text(
+                              'No Saved Workouts',
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          );
                         }
                       }
                     },
@@ -947,7 +976,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                     child: Text(
                       'Continue Workout - $currentWorkoutName',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
                     ),
                   ),
                 ),
