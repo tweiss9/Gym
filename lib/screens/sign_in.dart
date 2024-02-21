@@ -145,84 +145,103 @@ class SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Sign In',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 120, 16, 16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Sign In',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 125),
-            ElevatedButton(
-              onPressed: () async {
-                await handleSignIn();
-              },
-              style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.blue,
-                  fixedSize: const Size(320, 40),
-                  shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero)),
-              child: const Text('Sign In'),
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CreateUserPage(),
+              const SizedBox(height: 30),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey),
                   ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.green,
-                  fixedSize: const Size(320, 40),
-                  shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero)),
-              child: const Text('Create User'),
-            ),
-            const SizedBox(height: 30),
-            SignInButton(
-              Buttons.googleDark,
-              onPressed: () async {
-                final UserCredential? userCredential = await signInWithGoogle();
-                if (userCredential != null) {
-                  if (mounted) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const WorkoutPage(),
-                      ),
-                    );
+                  labelStyle: TextStyle(color: Colors.black),
+                ),
+                cursorColor: Colors.black,
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                  labelStyle: TextStyle(color: Colors.black),
+                ),
+                cursorColor: Colors.black,
+              ),
+              const SizedBox(height: 125),
+              ElevatedButton(
+                onPressed: () async {
+                  await handleSignIn();
+                },
+                style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.blue,
+                    fixedSize: const Size(320, 40),
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero)),
+                child: const Text('Sign In',
+                    style: TextStyle(
+                      fontSize: 20,
+                    )),
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CreateUserPage(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.green,
+                    fixedSize: const Size(320, 40),
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero)),
+                child: const Text('Create User',
+                    style: TextStyle(
+                      fontSize: 20,
+                    )),
+              ),
+              const SizedBox(height: 30),
+              SignInButton(
+                Buttons.googleDark,
+                onPressed: () async {
+                  final UserCredential? userCredential =
+                      await signInWithGoogle();
+                  if (userCredential != null) {
+                    if (mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const WorkoutPage(),
+                        ),
+                      );
+                    }
                   }
-                }
-              },
-            ),
-          ],
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

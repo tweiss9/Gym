@@ -47,6 +47,10 @@ class CreateUserPageState extends State<CreateUserPage> {
         labelText: label,
         border: const OutlineInputBorder(),
         errorText: errors[errorKey],
+        focusedBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey),
+        ),
+        labelStyle: const TextStyle(color: Colors.black),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -134,17 +138,15 @@ class CreateUserPageState extends State<CreateUserPage> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 120, 16, 16),
           child: Form(
-            key: _formKey,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 32.0),
                 const Text(
                   'Create Account',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 32,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -170,7 +172,10 @@ class CreateUserPageState extends State<CreateUserPage> {
                       fixedSize: const Size(320, 40),
                       shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.zero)),
-                  child: const Text("Create"),
+                  child: const Text("Create",
+                      style: TextStyle(
+                        fontSize: 20,
+                      )),
                 ),
                 const SizedBox(height: 40),
                 ElevatedButton(
@@ -188,7 +193,10 @@ class CreateUserPageState extends State<CreateUserPage> {
                       fixedSize: const Size(320, 40),
                       shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.zero)),
-                  child: const Text("Go Back to Sign In Page"),
+                  child: const Text("Go Back to Sign In Page",
+                      style: TextStyle(
+                        fontSize: 20,
+                      )),
                 )
               ],
             ),
