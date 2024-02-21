@@ -201,6 +201,7 @@ class HistoryPageState extends State<HistoryPage> {
                   Popup(
                     false,
                     false,
+                    true,
                     title: 'Delete Exercise Data',
                     contentController:
                         'Are you sure you want to delete this workout in your history? This cannot be undone.',

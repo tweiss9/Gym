@@ -9,17 +9,22 @@ class Popup {
   final String cancelButtonText;
   final bool isNumber;
   final bool isText;
+  final bool isWarning;
   final TextEditingController textController = TextEditingController();
 
-  Popup(this.isNumber, this.isText,
-      {required this.title,
-      required this.contentController,
-      required this.onOkPressed,
-      required this.okButtonText,
-      required this.cancelButtonText});
+  Popup(
+    this.isNumber,
+    this.isText,
+    this.isWarning, {
+    required this.title,
+    required this.contentController,
+    required this.onOkPressed,
+    required this.okButtonText,
+    required this.cancelButtonText,
+  });
 
   void show(BuildContext context) {
-    final TextEditingController textController = TextEditingController();
+    //final TextEditingController textController = TextEditingController();
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -101,7 +106,8 @@ class Popup {
                         },
                         style: ElevatedButton.styleFrom(
                           foregroundColor: Colors.white,
-                          backgroundColor: Colors.green,
+                          backgroundColor:
+                              isWarning ? Colors.red : Colors.green,
                           fixedSize: const Size(300, 40),
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.zero,
@@ -118,7 +124,7 @@ class Popup {
                         },
                         style: ElevatedButton.styleFrom(
                           foregroundColor: Colors.white,
-                          backgroundColor: Colors.red,
+                          backgroundColor: Colors.grey,
                           fixedSize: const Size(300, 40),
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.zero,

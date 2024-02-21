@@ -351,6 +351,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                         Popup(
                           false,
                           true,
+                          false,
                           title: 'Edit Workout Name',
                           contentController: 'Enter new workout name',
                           onOkPressed: ({String? textInput}) {
@@ -377,6 +378,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                         Popup(
                           false,
                           false,
+                          true,
                           title: 'Delete Workout',
                           contentController:
                               'Are you sure you want to delete this workout?',
@@ -668,6 +670,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                 Popup(
                   false,
                   false,
+                  true,
                   title: 'Delete Workout',
                   contentController:
                       'Are you sure you want to delete this workout?',
@@ -699,6 +702,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                 Popup(
                   false,
                   true,
+                  false,
                   title: 'Edit Workout Name',
                   contentController: 'Enter new workout name',
                   onOkPressed: ({
@@ -773,6 +777,7 @@ class WorkoutPageState extends State<WorkoutPage> {
             Popup(
               false,
               true,
+              true,
               title: 'Create an Exercise',
               contentController: 'Enter exercise name',
               onOkPressed: ({String? textInput}) {
@@ -800,6 +805,7 @@ class WorkoutPageState extends State<WorkoutPage> {
             Popup(
               false,
               false,
+              false,
               title: 'Finish Workout',
               contentController:
                   'Are you sure you want to finish this workout?',
@@ -825,6 +831,7 @@ class WorkoutPageState extends State<WorkoutPage> {
             Popup(
               false,
               false,
+              true,
               title: 'Cancel Workout',
               contentController:
                   'Are you sure you want to cancel this workout?',
@@ -870,6 +877,7 @@ class WorkoutPageState extends State<WorkoutPage> {
                       Popup(
                         false,
                         true,
+                        false,
                         title: 'Create a Workout',
                         contentController: 'Enter workout name',
                         onOkPressed: ({String? textInput}) {

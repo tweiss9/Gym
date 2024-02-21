@@ -140,6 +140,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                   Popup(
                     true,
                     false,
+                    false,
                     title: 'Edit Reps',
                     contentController: 'Enter the number of reps',
                     onOkPressed: ({String? textInput}) {
@@ -178,6 +179,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                 onTap: () {
                   Popup(
                     true,
+                    false,
                     false,
                     title: 'Edit Weight',
                     contentController: 'Enter the weight',
@@ -424,6 +426,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                     Popup(
                       false,
                       true,
+                      false,
                       title: 'Edit Exercise',
                       contentController: 'Enter the exercise name',
                       onOkPressed: ({String? textInput}) {
@@ -529,6 +532,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                               Popup(
                                 true,
                                 false,
+                                false,
                                 title: 'Edit Reps',
                                 contentController: 'Enter the number of reps',
                                 onOkPressed: ({String? textInput}) {
@@ -561,6 +565,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                             onTap: () {
                               Popup(
                                 true,
+                                false,
                                 false,
                                 title: 'Edit Weight',
                                 contentController: 'Enter the weight',

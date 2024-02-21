@@ -279,6 +279,7 @@ class SettingsPageState extends State<SettingsPage> {
                 Popup(
                   false,
                   true,
+                  false,
                   title: 'Edit Name',
                   contentController: 'Edit your name below',
                   onOkPressed: ({
@@ -309,6 +310,7 @@ class SettingsPageState extends State<SettingsPage> {
                 Popup(
                   false,
                   false,
+                  true,
                   title: 'Sign Out',
                   contentController:
                       'Are you sure you want to sign out? All unsaved data will be lost.',
@@ -336,6 +338,7 @@ class SettingsPageState extends State<SettingsPage> {
                 Popup(
                   false,
                   false,
+                  true,
                   title: 'Delete Account',
                   contentController:
                       'Are you sure you want to delete your account? This action cannot be undone.',
