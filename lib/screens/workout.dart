@@ -802,6 +802,11 @@ class WorkoutPageState extends State<WorkoutPage> {
                 const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           ),
           onPressed: () {
+            if (exerciseWidgets.isEmpty) {
+              ErrorHandler.showError(
+                  context, 'Can\'t finish workout without exercises');
+              return;
+            }
             Popup(
               false,
               false,
