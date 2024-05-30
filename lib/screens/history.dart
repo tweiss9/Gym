@@ -107,7 +107,7 @@ class HistoryPageState extends State<HistoryPage> {
       }
     }
 
-    if (mounted) {
+    if (context.mounted) {
       showDialog(
         context: context,
         builder: (BuildContext context) {

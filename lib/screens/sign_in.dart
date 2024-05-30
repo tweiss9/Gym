@@ -229,7 +229,7 @@ class SignInPageState extends State<SignInPage> {
                   final UserCredential? userCredential =
                       await signInWithGoogle();
                   if (userCredential != null) {
-                    if (mounted) {
+                    if (context.mounted) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
