@@ -777,7 +777,7 @@ class WorkoutPageState extends State<WorkoutPage> {
             Popup(
               false,
               true,
-              true,
+              false,
               title: 'Create an Exercise',
               contentController: 'Enter exercise name',
               onOkPressed: ({String? textInput}) {
