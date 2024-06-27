@@ -140,6 +140,7 @@ class CreateUserPageState extends State<CreateUserPage> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 120, 16, 16),
           child: Form(
+            key: _formKey,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
