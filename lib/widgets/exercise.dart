@@ -443,8 +443,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
               padding: const EdgeInsets.only(top: 15.0, bottom: 8.0),
               child: const Row(
                 children: [
-                  SizedBox(
-                    width: 73,
+                  Expanded(
                     child: Center(
                       child: Text(
                         'Set',
@@ -453,8 +452,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                       ),
                     ),
                   ),
-                  SizedBox(
-                    width: 100,
+                  Expanded(
                     child: Center(
                       child: Text(
                         'Rep',
@@ -463,8 +461,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                       ),
                     ),
                   ),
-                  SizedBox(
-                    width: 104,
+                  Expanded(
                     child: Center(
                       child: Text(
                         'lbs',
@@ -473,8 +470,7 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
                       ),
                     ),
                   ),
-                  SizedBox(
-                    width: 96,
+                  Expanded(
                     child: Center(
                       child: Text(
                         '\u2713',
