@@ -119,8 +119,8 @@ class ExerciseWidgetState extends State<ExerciseWidget> {
       int rowIndex = entry.key;
       _Row row = entry.value;
       return DataRow(
-        color: MaterialStateProperty.resolveWith<Color?>(
-          (Set<MaterialState> states) {
+        color: WidgetStateProperty.resolveWith<Color?>(
+          (Set<WidgetState> states) {
             if (row.isSelected) {
               return Colors.green;
             }

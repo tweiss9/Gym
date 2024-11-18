@@ -242,8 +242,10 @@ class HistoryPageState extends State<HistoryPage> {
         .child(key);
 
     historyRef.remove().then((_) {
-      setState(() {});
-      Navigator.of(context).pop();
+      if (mounted) {
+        setState(() {});
+        Navigator.of(context).pop();
+      }
     });
   }
 
